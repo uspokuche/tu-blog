@@ -5,15 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Regalo Retro - Feliz Cumpleaños</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* BLINDAJE: Oculto por defecto para control anti-URL directa */
         body {
+            /* BLINDAJE: Oculto por defecto para evitar acceso por URL */
             display: none;
             background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'); 
             background-size: cover;
@@ -114,7 +110,7 @@
             transition: transform 0.2s;
         }
 
-        .icon-btn:hover { transform: scale(1.1) background: rgba(255, 255, 255, 0.2); }
+        .icon-btn:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.2); }
 
         .paper-letter {
             background-color: #fdf6e3;
@@ -148,7 +144,7 @@
         .poke-item:hover { transform: scale(1.2); }
 
         .pokemon-card {
-            background-color: #f8d030; 
+            background-color: #f8d030;
             width: 320px;
             border: 10px solid #e8b000;
             border-radius: 15px;
@@ -253,21 +249,23 @@
         <button class="btn-retro" style="margin-top: 30px;" onclick="showScreen('screen-hub')">GUARDAR CARTA</button>
     </div>
 
-    <script>
-        // --- CONFIGURACIÓN DE FIREBASE (Usa los mismos datos del index) ---
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY_AQUI",
-            authDomain: "TU_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_PROJECT_ID.appspot.com",
-            messagingSenderId: "TU_SENDER_ID",
-            appId: "TU_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // --- MOTOR DE CONTROL DE RUTA RETRO ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyCygxBrMb1p8hHPhG_54kXeuHc6GVKYr8c",
+          authDomain: "regalo-angelica.firebaseapp.com",
+          projectId: "regalo-angelica",
+          storageBucket: "regalo-angelica.firebasestorage.app",
+          messagingSenderId: "246150161010",
+          appId: "1:246150161010:web:23145387bf939b750918eb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- SISTEMA ANTI-TRAMPAS ---
         async function validarAccesoDirecto() {
             try {
                 const res = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
@@ -284,27 +282,33 @@
                 return;
             }
 
-            db.ref('proyecto_magico/eleccion').once('value', (snapshot) => {
+            const dbRef = ref(db, 'proyecto_magico/eleccion');
+            try {
+                const snapshot = await get(dbRef);
                 const eleccion = snapshot.val();
                 if (eleccion === 'pixel') {
-                    document.body.style.display = 'flex'; // Revelar cuerpo (es flex)
+                    document.body.style.display = 'flex'; // Todo en orden
                 } else {
-                    window.location.href = 'index.html';
+                    window.location.href = 'index.html'; // Expulsión
                 }
-            });
+            } catch (error) {
+                window.location.href = 'index.html';
+            }
         }
         validarAccesoDirecto();
 
-        // --- NAVEGACIÓN DE PANTALLAS ---
+        // --- LOGICA ORIGINAL RETRO ---
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
 
-        // --- PANTALLA DE INICIO ---
+        // Exponer al scope global para que funcionen los botones HTML "onclick"
+        window.showScreen = showScreen;
+
         document.getElementById('btn-yes').addEventListener('click', () => {
             const audio = document.getElementById('bgm');
-            audio.play().catch(e => console.log("Audio requiere interacción previa"));
+            audio.play().catch(e => console.log("Audio requiere interacción"));
             showScreen('screen-hub');
             startHubDialogues();
         });
@@ -313,7 +317,6 @@
             alert("Opción incorrecta. ¡Inténtalo de nuevo! 😠❤️");
         });
 
-        // --- SISTEMA DE DIÁLOGOS DEL HUB ---
         const hubPhrases = [
             "Amo cómo se ven tus ojitos cuando te ríes...",
             "Amo lo inteligente que eres...",
@@ -360,7 +363,6 @@
             }
         }
 
-        // --- CARTA ESCRITA (MÁQUINA DE ESCRIBIR) ---
         const letterText = "Feliz Cumpleaños! Espero que tengas un día hermoso.\n\nEres una persona increíble y te mereces todo lo mejor del mundo.\n\nGracias por existir y llenarme de alegría.\n\nTe amo muchísimo.";
         
         document.getElementById('btn-letter').addEventListener('click', () => {
@@ -383,18 +385,16 @@
             typeLetter();
         });
 
-        // --- VER CARTA POKÉMON ---
         document.getElementById('btn-card').addEventListener('click', () => {
             showScreen('screen-card');
         });
 
-        // --- MINIJUEGO POKEBOLA ---
         document.getElementById('btn-game').addEventListener('click', () => {
             showScreen('screen-game');
             initGame();
         });
 
-        const balls = ['🏐', '🏀', '🔮', '⚾', '🎱', '⚽', '🎾', '🔴']; 
+        const balls = ['🏐', '🏀', '🔮', '⚾', '🎱', '⚽', '🎾', '🔴'];
         const gameDialog = document.getElementById('game-dialog');
 
         function initGame() {
@@ -404,9 +404,9 @@
             
             let items = [];
             for(let i=0; i<19; i++) {
-                items.push(balls[Math.floor(Math.random() * (balls.length - 1))]); 
+                items.push(balls[Math.floor(Math.random() * (balls.length - 1))]);
             }
-            items.push('🔴'); 
+            items.push('🔴');
             
             items.sort(() => Math.random() - 0.5);
 
