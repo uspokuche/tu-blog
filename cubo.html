@@ -5,15 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Creador de Regalo - Cubo del Amor</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* BLINDAJE: Oculto por defecto para evitar parpadeos visuales si intenta vulnerar la URL */
         body {
+            /* BLINDAJE: Oculto por defecto para evitar acceso por URL */
             display: none;
             background-color: #050505;
             overflow: hidden;
@@ -30,7 +26,6 @@
             z-index: 1; pointer-events: none;
         }
 
-        /* --- PANTALLA 1: CREADOR (SETUP) --- */
         #setup-screen {
             position: absolute;
             z-index: 50;
@@ -82,7 +77,6 @@
         .magic-btn.active { cursor: pointer; opacity: 1; box-shadow: 0 0 20px rgba(255, 51, 102, 0.6); }
         .magic-btn.active:active { transform: scale(0.95); }
 
-        /* --- PANTALLA 2: CUBO Y AUDIO --- */
         #cube-screen {
             display: none; width: 100%; height: 100%;
             flex-direction: column; align-items: center; justify-content: center;
@@ -194,21 +188,23 @@
         </div>
     </div>
 
-    <script>
-        // --- CONFIGURACIÓN DE FIREBASE (Usa los mismos datos del index) ---
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY_AQUI",
-            authDomain: "TU_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_PROJECT_ID.appspot.com",
-            messagingSenderId: "TU_SENDER_ID",
-            appId: "TU_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // --- MOTOR DE ENTRADA CONTROLADA ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyCygxBrMb1p8hHPhG_54kXeuHc6GVKYr8c",
+          authDomain: "regalo-angelica.firebaseapp.com",
+          projectId: "regalo-angelica",
+          storageBucket: "regalo-angelica.firebasestorage.app",
+          messagingSenderId: "246150161010",
+          appId: "1:246150161010:web:23145387bf939b750918eb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- SISTEMA ANTI-TRAMPAS ---
         async function validarAccesoDirecto() {
             try {
                 const res = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
@@ -216,32 +212,32 @@
                 const data = await res.json();
                 const fecha = new Date(data.datetime);
                 
-                // Si manipula el reloj local y aún no es 18, expulsión radical al index
                 if (fecha.getDate() < 18) {
                     window.location.href = 'index.html';
                     return;
                 }
             } catch(e) {
-                // Si apaga internet para esquivar la API, rebota al login por seguridad
                 window.location.href = 'index.html';
                 return;
             }
 
-            // Cruzar verificación con la elección persistente en la nube de Google
-            db.ref('proyecto_magico/eleccion').once('value', (snapshot) => {
+            const dbRef = ref(db, 'proyecto_magico/eleccion');
+            try {
+                const snapshot = await get(dbRef);
                 const eleccion = snapshot.val();
                 if (eleccion === 'cubo') {
-                    document.body.style.display = 'flex'; // Revelar interfaz de forma segura
+                    document.body.style.display = 'flex'; // Todo en orden, revelamos pantalla
                 } else {
-                    window.location.href = 'index.html'; // Expulsar intruso
+                    window.location.href = 'index.html'; // Expulsión
                 }
-            });
+            } catch (error) {
+                window.location.href = 'index.html';
+            }
         }
+        
         validarAccesoDirecto();
 
-        /* ==========================================
-           1. SISTEMA DE ARCHIVOS (SPA LOGIC)
-           ========================================== */
+        // --- LOGICA ORIGINAL DEL CUBO ---
         const imgInput = document.getElementById('image-upload');
         const audInput = document.getElementById('audio-upload');
         const lblImages = document.getElementById('lbl-images');
@@ -310,15 +306,13 @@
                 void cubeScreen.offsetWidth; 
                 cubeScreen.style.opacity = '1';
                 
-                audioEl.play().catch(e => console.log("Autoplay prevenido. Requiere interacción de audio."));
+                audioEl.play().catch(e => console.log("Autoplay prevenido."));
                 isPlaying = true;
                 initCubeMotor();
             }, 500);
         });
 
-        /* ==========================================
-           2. MOTOR DEL REPRODUCTOR DE AUDIO
-           ========================================== */
+        // --- MOTOR DE AUDIO ---
         const audio = document.getElementById('audio');
         const playBtn = document.getElementById('playBtn');
         const progressContainer = document.getElementById('progressContainer');
@@ -344,9 +338,7 @@
             audio.currentTime = (e.offsetX / width) * audio.duration;
         });
 
-        /* ==========================================
-           3. MOTOR DE FÍSICA Y ROTACIÓN DEL CUBO
-           ========================================== */
+        // --- MOTOR DEL CUBO ---
         const cube = document.getElementById('cube');
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
@@ -400,9 +392,7 @@
         document.addEventListener('touchmove', handleMove, {passive: false});
         document.addEventListener('touchend', handleEnd);
 
-        /* ==========================================
-           4. SISTEMA DE PARTÍCULAS (FONDO)
-           ========================================== */
+        // --- PARTICULAS ---
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
