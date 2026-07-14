@@ -176,27 +176,27 @@
 
     <div id="countdown-screen" class="glass-panel">
         <h1 class="cursive-title">Aún no es hora ✨</h1>
-        <p>La magia se está preparando. Podrás acceder a tus regalos cuando el contador llegue a cero (el 18 de este mes).</p>
+        <p>La magia se está preparando. Podrás acceder a tus regalos cuando el contador llegue a cero (el 18 de julio).</p>
         <div class="timer-box" id="timer-display">00d 00h 00m 00s</div>
     </div>
 
     <div id="hub-screen">
         <h1 class="cursive-title" style="font-size: 3rem;">Tus Regalos, Angélica</h1>
         <p style="color: #ccc; text-align: center; max-width: 600px; margin: 0 auto; line-height: 1.5;">
-            El destino te ha traído aquí. Tienes frente a ti dos regalos de cumple mes, pero <strong>solo puedes elegir uno</strong>. Piénsalo bien, porque el otro se desvanecerá para siempre.
+            El destino te ha traído aquí. Tienes frente a ti dos regalos, pero <strong>solo puedes elegir uno</strong>. Piénsalo bien, porque el otro se desvanecerá para siempre.
         </p>
 
         <div class="cards-grid">
             <div class="gift-card" id="card-cubo" onclick="triggerChoice('cubo')">
                 <span class="gift-icon">🧊</span>
                 <h3 class="gift-title">El Cubo del Amor</h3>
-                <p class="gift-desc">Un recuerdo tridimensional de nosotros. (Regalo Cumple Mes)</p>
+                <p class="gift-desc">Un recuerdo tridimensional de nosotros.</p>
             </div>
 
             <div class="gift-card" id="card-pixel" onclick="triggerChoice('pixel')">
                 <span class="gift-icon">🕹️</span>
                 <h3 class="gift-title">Aventura Retro</h3>
-                <p class="gift-desc">Un universo pixelado hecho a tu medida. (Regalo Cumple Mes)</p>
+                <p class="gift-desc">Un universo pixelado hecho a tu medida.</p>
             </div>
 
             <div class="gift-card locked" id="card-cumple" onclick="checkBirthday()">
@@ -228,7 +228,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // Configuración con databaseURL explícito integrado
         const firebaseConfig = {
           apiKey: "AIzaSyCygxBrMb1p8hHPhG_54kXeuHc6GVKYr8c",
           authDomain: "regalo-angelica.firebaseapp.com",
@@ -242,9 +241,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- LÓGICA DE ACCESO (LOGIN) ---
-        const SECRET_DATE_USER = '2026-05-18'; 
-        const SECRET_DATE_DEV = '2026-03-26';  
+        // --- LÓGICA DE ACCESO (LOGIN Y FECHAS) ---
+        const SECRET_DATE_USER = '2026-05-18'; // Clave de acceso de Angélica
+        const SECRET_DATE_DEV = '2026-03-26';  // Tu clave Maestra
         
         let timerInterval;
         let fechaServidorGlobal = null;
@@ -260,12 +259,13 @@
             }
         }
 
-        function getTargetDate(baseDate) {
-            return new Date(baseDate.getFullYear(), baseDate.getMonth(), 18, 0, 0, 0);
+        // OBJETIVO: 18 de Julio de 2026 a las 00:00:00
+        function getTargetDate() {
+            return new Date(2026, 6, 18, 0, 0, 0); // Mes 6 en JS es Julio
         }
 
         function startSecureTimer() {
-            const targetDate = getTargetDate(fechaServidorGlobal);
+            const targetDate = getTargetDate();
             
             updateTimerDisplay(targetDate);
             timerInterval = setInterval(() => {
@@ -316,7 +316,7 @@
                     btnUnlock.innerText = "Desbloquear 🗝️";
                     
                     if (!fechaServidorGlobal) {
-                        errorMsg.innerText = "Error de sincronización segura. Requiere internet.";
+                        errorMsg.innerText = "Error de conexión segura. Requiere internet.";
                         errorMsg.style.display = 'block';
                         return;
                     }
@@ -329,10 +329,11 @@
                     loginScreen.style.display = 'none';
 
                     if (inputDate === SECRET_DATE_DEV) {
+                        // Acceso directo del programador salta el contador
                         hubScreen.classList.add('active');
                         checkExistingChoice();
                     } else {
-                        const targetDate = getTargetDate(fechaServidorGlobal);
+                        const targetDate = getTargetDate();
 
                         if (fechaServidorGlobal < targetDate) {
                             countdownScreen.style.display = 'flex';
@@ -352,7 +353,7 @@
             }
         });
 
-        // --- LÓGICA DE ELECCIÓN ÚNICA PERMANENTE (FIREBASE) ---
+        // --- LÓGICA DE ELECCIÓN ÚNICA EN LA NUBE ---
         let selectedGiftTemp = "";
 
         async function checkExistingChoice() {
@@ -372,7 +373,7 @@
                     }
                 }
             } catch (error) {
-                console.error("Error al consultar Firebase:", error);
+                console.error("Error Firebase:", error);
             }
         }
 
@@ -404,8 +405,7 @@
 
         function checkBirthday() {
             const fecha = fechaServidorGlobal || new Date();
-            const currentMonth = fecha.getMonth(); 
-            
+            const currentMonth = fecha.getMonth(); // 7 = Agosto
             if (currentMonth >= 7) { 
                 window.location.href = 'cumple.html';
             } else {
@@ -421,7 +421,7 @@
         window.checkBirthday = checkBirthday;
         window.closeModal = closeModal;
 
-        // --- SISTEMA DE PARTÍCULAS (FONDO CÓSMICO) ---
+        // --- SISTEMA DE PARTÍCULAS ---
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
@@ -435,12 +435,9 @@
 
         class Star {
             constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.size = Math.random() * 2;
-                this.speed = Math.random() * 0.5 + 0.1;
-                this.alpha = Math.random();
-                this.alphaChange = (Math.random() * 0.02) - 0.01;
+                this.x = Math.random() * width; this.y = Math.random() * height;
+                this.size = Math.random() * 2; this.speed = Math.random() * 0.5 + 0.1;
+                this.alpha = Math.random(); this.alphaChange = (Math.random() * 0.02) - 0.01;
             }
             update() {
                 this.y -= this.speed;
@@ -449,15 +446,12 @@
                 if (this.alpha <= 0.1 || this.alpha >= 1) this.alphaChange *= -1;
             }
             draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`; ctx.fill();
             }
         }
 
         for (let i = 0; i < 150; i++) particles.push(new Star());
-
         function animateParticles() {
             ctx.clearRect(0, 0, width, height);
             particles.forEach(p => { p.update(); p.draw(); });
