@@ -9,6 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
+            /* BLINDAJE: Oculto hasta que Firebase apruebe la entrada */
             display: none;
             background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'); 
             background-size: cover;
@@ -95,64 +96,41 @@
         .cursor { animation: blink 1s step-end infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        .hub-icons {
-            display: flex; gap: 30px; margin-bottom: 150px;
-        }
+        .hub-icons { display: flex; gap: 30px; margin-bottom: 150px; }
 
         .icon-btn {
             background: rgba(0, 0, 0, 0.6);
-            border: 4px solid #fff;
-            font-size: 2.5rem;
-            padding: 20px;
-            cursor: pointer;
-            box-shadow: 4px 4px 0px #000;
-            transition: transform 0.2s;
+            border: 4px solid #fff; font-size: 2.5rem;
+            padding: 20px; cursor: pointer;
+            box-shadow: 4px 4px 0px #000; transition: transform 0.2s;
         }
 
         .icon-btn:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.2); }
 
         .paper-letter {
-            background-color: #fdf6e3;
-            color: #333;
-            width: 90%; max-width: 600px;
-            padding: 40px;
-            border: 2px solid #ccc;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
+            background-color: #fdf6e3; color: #333;
+            width: 90%; max-width: 600px; padding: 40px;
+            border: 2px solid #ccc; box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
             font-family: 'Courier New', Courier, monospace;
-            font-size: 1.2rem;
-            font-weight: bold;
-            line-height: 1.6;
-            text-align: left;
+            font-size: 1.2rem; font-weight: bold; line-height: 1.6; text-align: left;
             position: relative;
             background-image: repeating-linear-gradient(transparent, transparent 31px, #add8e6 31px, #add8e6 32px);
             margin-bottom: 20px;
         }
-        .paper-letter::before {
-            content: ''; position: absolute; top: 0; left: 30px; bottom: 0; width: 2px; background-color: #ffb6c1;
-        }
+        .paper-letter::before { content: ''; position: absolute; top: 0; left: 30px; bottom: 0; width: 2px; background-color: #ffb6c1; }
 
         .grid-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            margin-bottom: 120px;
+            display: grid; grid-template-columns: repeat(5, 1fr);
+            gap: 15px; margin-bottom: 120px;
         }
-        .poke-item {
-            font-size: 2rem; cursor: pointer; transition: transform 0.1s;
-        }
+        .poke-item { font-size: 2rem; cursor: pointer; transition: transform 0.1s; }
         .poke-item:hover { transform: scale(1.2); }
 
         .pokemon-card {
-            background-color: #f8d030;
-            width: 320px;
-            border: 10px solid #e8b000;
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.6);
-            color: #000;
-            font-family: 'Arial', sans-serif;
-            text-align: left;
-            position: relative;
+            background-color: #f8d030; width: 320px;
+            border: 10px solid #e8b000; border-radius: 15px; padding: 15px;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.6); color: #000;
+            font-family: 'Arial', sans-serif; text-align: left; position: relative;
         }
         
         .card-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; }
@@ -252,7 +230,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // Configuración con databaseURL explícito integrado
         const firebaseConfig = {
           apiKey: "AIzaSyCygxBrMb1p8hHPhG_54kXeuHc6GVKYr8c",
           authDomain: "regalo-angelica.firebaseapp.com",
@@ -266,27 +243,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- SISTEMA ANTI-TRAMPAS ---
+        // --- SISTEMA ANTI-TRAMPAS SIMPLIFICADO Y EFICAZ ---
         async function validarAccesoDirecto() {
-            try {
-                const res = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
-                if(!res.ok) throw new Error();
-                const data = await res.json();
-                const fecha = new Date(data.datetime);
-                
-                if (fecha.getDate() < 18) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-            } catch(e) {
-                window.location.href = 'index.html';
-                return;
-            }
-
             const dbRef = ref(db, 'proyecto_magico/eleccion');
             try {
                 const snapshot = await get(dbRef);
                 const eleccion = snapshot.val();
+                
                 if (eleccion === 'pixel') {
                     document.body.style.display = 'flex'; 
                 } else {
