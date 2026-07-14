@@ -9,6 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
+            /* BLINDAJE: Oculto hasta que Firebase apruebe la entrada */
             display: none;
             background-color: #050505;
             overflow: hidden;
@@ -162,7 +163,7 @@
             <input type="file" id="audio-upload" accept="audio/*">
         </div>
 
-        <button class="magic-btn" id="btn-create" disabled>✨ Crear Magia ✨</button>
+        <button type="button" class="magic-btn" id="btn-create" disabled>✨ Crear Magia ✨</button>
     </div>
 
     <div id="cube-screen">
@@ -191,7 +192,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // Configuración con databaseURL explícito integrado
         const firebaseConfig = {
           apiKey: "AIzaSyCygxBrMb1p8hHPhG_54kXeuHc6GVKYr8c",
           authDomain: "regalo-angelica.firebaseapp.com",
@@ -205,30 +205,18 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- SISTEMA ANTI-TRAMPAS ---
+        // --- SISTEMA ANTI-TRAMPAS SIMPLIFICADO Y EFICAZ ---
         async function validarAccesoDirecto() {
-            try {
-                const res = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
-                if(!res.ok) throw new Error();
-                const data = await res.json();
-                const fecha = new Date(data.datetime);
-                
-                if (fecha.getDate() < 18) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-            } catch(e) {
-                window.location.href = 'index.html';
-                return;
-            }
-
             const dbRef = ref(db, 'proyecto_magico/eleccion');
             try {
                 const snapshot = await get(dbRef);
                 const eleccion = snapshot.val();
+                
+                // Si alguien (usuario o Dev) guardó 'cubo' en Firebase desde index.html, lo dejamos pasar.
                 if (eleccion === 'cubo') {
                     document.body.style.display = 'flex'; 
                 } else {
+                    // Si intenta entrar directo por URL antes del 18 de Julio, esto estará vacío y lo expulsará.
                     window.location.href = 'index.html'; 
                 }
             } catch (error) {
@@ -313,7 +301,6 @@
             }, 500);
         });
 
-        // --- MOTOR DE AUDIO ---
         const audio = document.getElementById('audio');
         const playBtn = document.getElementById('playBtn');
         const progressContainer = document.getElementById('progressContainer');
@@ -339,7 +326,6 @@
             audio.currentTime = (e.offsetX / width) * audio.duration;
         });
 
-        // --- MOTOR DEL CUBO ---
         const cube = document.getElementById('cube');
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
@@ -393,7 +379,6 @@
         document.addEventListener('touchmove', handleMove, {passive: false});
         document.addEventListener('touchend', handleEnd);
 
-        // --- PARTICULAS ---
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
@@ -408,14 +393,10 @@
 
         class Particle {
             constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height - height;
-                this.size = Math.random() * 15 + 10;
-                this.speedY = Math.random() * 1 + 0.5;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                this.rotation = Math.random() * 360;
-                this.rotationSpeed = (Math.random() - 0.5) * 2;
+                this.x = Math.random() * width; this.y = Math.random() * height - height;
+                this.size = Math.random() * 15 + 10; this.speedY = Math.random() * 1 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.5; this.emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                this.rotation = Math.random() * 360; this.rotationSpeed = (Math.random() - 0.5) * 2;
             }
             update() {
                 this.y += this.speedY; this.x += this.speedX; this.rotation += this.rotationSpeed;
