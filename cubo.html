@@ -207,7 +207,7 @@
         // --- SISTEMA ANTI-TRAMPAS ---
         async function validarAccesoDirecto() {
             try {
-                const res = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
+                const res = await fetch('https://worldclockapi.com/api/json/est/now](https://worldclockapi.com/api/json/est/now');
                 if(!res.ok) throw new Error();
                 const data = await res.json();
                 const fecha = new Date(data.datetime);
