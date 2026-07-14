@@ -252,7 +252,7 @@
         // Hora segura de internet
         async function getNetworkTime() {
             try {
-                const response = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
+                const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/Caracas');
                 if(!response.ok) return null;
                 const data = await response.json();
                 return new Date(data.datetime);
