@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cubo del Amor</title>
+    <title>Creador de Regalo - Cubo del Amor</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            /* BLINDAJE: Oculto por defecto para evitar acceso por URL */
             display: none;
             background-color: #050505;
             overflow: hidden;
@@ -192,14 +191,15 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+        // Configuración con databaseURL explícito integrado
         const firebaseConfig = {
           apiKey: "AIzaSyCygxBrMb1p8hHPhG_54kXeuHc6GVKYr8c",
           authDomain: "regalo-angelica.firebaseapp.com",
+          databaseURL: "https://regalo-angelica-default-rtdb.firebaseio.com/",
           projectId: "regalo-angelica",
           storageBucket: "regalo-angelica.firebasestorage.app",
           messagingSenderId: "246150161010",
           appId: "1:246150161010:web:23145387bf939b750918eb"
-          databaseURL: "https://regalo-angelica-default-rtdb.firebaseio.com/"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -208,7 +208,7 @@
         // --- SISTEMA ANTI-TRAMPAS ---
         async function validarAccesoDirecto() {
             try {
-                const res = await fetch('https://worldclockapi.com/api/json/est/now](https://worldclockapi.com/api/json/est/now');
+                const res = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
                 if(!res.ok) throw new Error();
                 const data = await res.json();
                 const fecha = new Date(data.datetime);
@@ -227,9 +227,9 @@
                 const snapshot = await get(dbRef);
                 const eleccion = snapshot.val();
                 if (eleccion === 'cubo') {
-                    document.body.style.display = 'flex'; // Todo en orden, revelamos pantalla
+                    document.body.style.display = 'flex'; 
                 } else {
-                    window.location.href = 'index.html'; // Expulsión
+                    window.location.href = 'index.html'; 
                 }
             } catch (error) {
                 window.location.href = 'index.html';
