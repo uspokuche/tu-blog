@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Regalo Retro - Feliz Cumpleaños</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* BLINDAJE: Oculto por defecto para control anti-URL directa */
+        body {
+            display: none;
+            background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'); 
+            background-size: cover;
+            background-position: center;
+            background-color: #2b1055; 
+            font-family: 'Press Start 2P', cursive;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(43, 16, 85, 0.4);
+            z-index: 1; pointer-events: none;
+        }
+
+        .screen {
+            position: absolute;
+            z-index: 10;
+            width: 100%; height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .screen.active { display: flex; }
+
+        h1, h2 {
+            text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000;
+            line-height: 1.5;
+        }
+
+        .title { font-size: 1.2rem; margin-bottom: 20px; color: #ffb8ff; }
+        
+        .btn-retro {
+            background-color: #4a148c;
+            border: 4px solid #fff;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            padding: 15px 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #000;
+            transition: transform 0.1s;
+            margin: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn-retro:hover { background-color: #7c43bd; }
+        .btn-retro:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #000; }
+        
+        .btn-green { background-color: #2e7d32; }
+        .btn-green:hover { background-color: #4caf50; }
+        
+        .btn-red { background-color: #c62828; }
+        .btn-red:hover { background-color: #e53935; }
+
+        .dialog-box {
+            position: absolute;
+            bottom: 5%;
+            width: 90%;
+            max-width: 800px;
+            background-color: #1a1a1a;
+            border: 4px solid #fff;
+            padding: 20px;
+            box-shadow: 4px 4px 0px #000;
+            text-align: left;
+            font-size: 0.8rem;
+            line-height: 1.8;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .dialog-text { display: inline-block; }
+        .cursor { animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .hub-icons {
+            display: flex; gap: 30px; margin-bottom: 150px;
+        }
+
+        .icon-btn {
+            background: rgba(0, 0, 0, 0.6);
+            border: 4px solid #fff;
+            font-size: 2.5rem;
+            padding: 20px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #000;
+            transition: transform 0.2s;
+        }
+
+        .icon-btn:hover { transform: scale(1.1) background: rgba(255, 255, 255, 0.2); }
+
+        .paper-letter {
+            background-color: #fdf6e3;
+            color: #333;
+            width: 90%; max-width: 600px;
+            padding: 40px;
+            border: 2px solid #ccc;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            line-height: 1.6;
+            text-align: left;
+            position: relative;
+            background-image: repeating-linear-gradient(transparent, transparent 31px, #add8e6 31px, #add8e6 32px);
+            margin-bottom: 20px;
+        }
+        .paper-letter::before {
+            content: ''; position: absolute; top: 0; left: 30px; bottom: 0; width: 2px; background-color: #ffb6c1;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 120px;
+        }
+        .poke-item {
+            font-size: 2rem; cursor: pointer; transition: transform 0.1s;
+        }
+        .poke-item:hover { transform: scale(1.2); }
+
+        .pokemon-card {
+            background-color: #f8d030; 
+            width: 320px;
+            border: 10px solid #e8b000;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.6);
+            color: #000;
+            font-family: 'Arial', sans-serif;
+            text-align: left;
+            position: relative;
+        }
+        
+        .card-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; }
+        .card-hp { color: #cc0000; }
+        
+        .card-image-container {
+            background: #fff; border: 4px solid #999;
+            height: 150px; display: flex; justify-content: center; align-items: center;
+            font-size: 5rem; margin-bottom: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .card-attack {
+            border-top: 2px solid #000; padding-top: 10px; margin-top: 10px;
+            display: flex; justify-content: space-between; font-weight: bold; font-size: 0.9rem;
+        }
+        .attack-desc { font-size: 0.7rem; font-weight: normal; margin-top: 5px; color: #333; }
+
+        @media (max-width: 600px) {
+            .title { font-size: 1rem; }
+            .hub-icons { gap: 15px; }
+            .icon-btn { font-size: 1.8rem; padding: 15px; }
+            .grid-container { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+            .poke-item { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="overlay"></div>
+    <audio id="bgm" src="cancion.mp3" loop></audio>
+
+    <div id="screen-welcome" class="screen active">
+        <h1 class="title">FELIZ CUMPLEAÑOS MI VIDA<br><br>¿Quieres ver tu regalo?</h1>
+        <div>
+            <button class="btn-retro btn-green" id="btn-yes">SÍIII</button>
+            <button class="btn-retro btn-red" id="btn-no">NO</button>
+        </div>
+    </div>
+
+    <div id="screen-hub" class="screen">
+        <h2 class="title" style="margin-top: -50px;">¡TUS REGALOS!<br><br><span style="font-size: 0.7rem;">Haz clic para descubrir sorpresas</span></h2>
+        
+        <div class="hub-icons">
+            <button class="icon-btn" id="btn-letter">✉️</button>
+            <button class="icon-btn" id="btn-card">💖</button>
+            <button class="icon-btn" id="btn-game">🔴</button>
+        </div>
+
+        <div class="dialog-box">
+            <span class="dialog-text" id="hub-dialog"></span><span class="cursor">_</span>
+        </div>
+    </div>
+
+    <div id="screen-letter" class="screen">
+        <div class="paper-letter" id="paper-text"></div>
+        <button class="btn-retro" onclick="showScreen('screen-hub')">VOLVER A LOS REGALOS</button>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <h2 class="title" style="margin-top: -30px;">ENCUENTRA LA POKÉBOLA OCULTA</h2>
+        <div class="grid-container" id="poke-grid"></div>
+        
+        <div class="dialog-box">
+            <span class="dialog-text" id="game-dialog">Encuentra la Pokébola correcta para ganar...</span>
+        </div>
+        <button class="btn-retro" style="position:absolute; top: 10px; left: 10px;" onclick="showScreen('screen-hub')">⬅ VOLVER</button>
+    </div>
+
+    <div id="screen-card" class="screen">
+        <div class="pokemon-card">
+            <div class="card-header">
+                <span>Amor Mío</span>
+                <span class="card-hp">100 HP ❤️</span>
+            </div>
+            <div class="card-image-container">💖</div>
+            <div style="font-size: 0.7rem; font-style: italic; text-align: center; margin-bottom: 10px;">
+                Pokémon Compañera de Vida
+            </div>
+            
+            <div class="card-attack">
+                <span>Mirada Enamorada</span>
+                <span>30</span>
+            </div>
+            <div class="attack-desc">Paraliza al oponente con su hermosa sonrisa.</div>
+            
+            <div class="card-attack">
+                <span>Beso Crítico</span>
+                <span>100</span>
+            </div>
+            <div class="attack-desc">Causa daño súper efectivo directo al corazón. Imposible de esquivar.</div>
+        </div>
+        
+        <button class="btn-retro" style="margin-top: 30px;" onclick="showScreen('screen-hub')">GUARDAR CARTA</button>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN DE FIREBASE (Usa los mismos datos del index) ---
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY_AQUI",
+            authDomain: "TU_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_PROJECT_ID.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- MOTOR DE CONTROL DE RUTA RETRO ---
+        async function validarAccesoDirecto() {
+            try {
+                const res = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
+                if(!res.ok) throw new Error();
+                const data = await res.json();
+                const fecha = new Date(data.datetime);
+                
+                if (fecha.getDate() < 18) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            } catch(e) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            db.ref('proyecto_magico/eleccion').once('value', (snapshot) => {
+                const eleccion = snapshot.val();
+                if (eleccion === 'pixel') {
+                    document.body.style.display = 'flex'; // Revelar cuerpo (es flex)
+                } else {
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+        validarAccesoDirecto();
+
+        // --- NAVEGACIÓN DE PANTALLAS ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // --- PANTALLA DE INICIO ---
+        document.getElementById('btn-yes').addEventListener('click', () => {
+            const audio = document.getElementById('bgm');
+            audio.play().catch(e => console.log("Audio requiere interacción previa"));
+            showScreen('screen-hub');
+            startHubDialogues();
+        });
+
+        document.getElementById('btn-no').addEventListener('click', () => {
+            alert("Opción incorrecta. ¡Inténtalo de nuevo! 😠❤️");
+        });
+
+        // --- SISTEMA DE DIÁLOGOS DEL HUB ---
+        const hubPhrases = [
+            "Amo cómo se ven tus ojitos cuando te ríes...",
+            "Amo lo inteligente que eres...",
+            "Me encanta abrazarte...",
+            "Tu sonrisa ilumina mi día entero...",
+            "Me fascina escucharte hablar de lo que te gusta..."
+        ];
+        
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let currentPhrase = "";
+        let isTyping = false;
+        const dialogEl = document.getElementById('hub-dialog');
+
+        function typeDialog() {
+            if (charIndex < currentPhrase.length) {
+                dialogEl.textContent += currentPhrase.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeDialog, 50);
+            } else {
+                isTyping = false;
+                setTimeout(nextPhrase, 3000);
+            }
+        }
+
+        function nextPhrase() {
+            if (document.getElementById('screen-hub').classList.contains('active')) {
+                phraseIndex = (phraseIndex + 1) % hubPhrases.length;
+                currentPhrase = hubPhrases[phraseIndex];
+                dialogEl.textContent = "";
+                charIndex = 0;
+                isTyping = true;
+                typeDialog();
+            }
+        }
+
+        function startHubDialogues() {
+            if (!isTyping) {
+                currentPhrase = hubPhrases[0];
+                dialogEl.textContent = "";
+                charIndex = 0;
+                isTyping = true;
+                typeDialog();
+            }
+        }
+
+        // --- CARTA ESCRITA (MÁQUINA DE ESCRIBIR) ---
+        const letterText = "Feliz Cumpleaños! Espero que tengas un día hermoso.\n\nEres una persona increíble y te mereces todo lo mejor del mundo.\n\nGracias por existir y llenarme de alegría.\n\nTe amo muchísimo.";
+        
+        document.getElementById('btn-letter').addEventListener('click', () => {
+            showScreen('screen-letter');
+            const paperEl = document.getElementById('paper-text');
+            paperEl.innerHTML = "";
+            let i = 0;
+            
+            function typeLetter() {
+                if (i < letterText.length) {
+                    if(letterText.charAt(i) === '\n') {
+                        paperEl.innerHTML += "<br>";
+                    } else {
+                        paperEl.innerHTML += letterText.charAt(i);
+                    }
+                    i++;
+                    setTimeout(typeLetter, 60);
+                }
+            }
+            typeLetter();
+        });
+
+        // --- VER CARTA POKÉMON ---
+        document.getElementById('btn-card').addEventListener('click', () => {
+            showScreen('screen-card');
+        });
+
+        // --- MINIJUEGO POKEBOLA ---
+        document.getElementById('btn-game').addEventListener('click', () => {
+            showScreen('screen-game');
+            initGame();
+        });
+
+        const balls = ['🏐', '🏀', '🔮', '⚾', '🎱', '⚽', '🎾', '🔴']; 
+        const gameDialog = document.getElementById('game-dialog');
+
+        function initGame() {
+            const grid = document.getElementById('poke-grid');
+            grid.innerHTML = "";
+            gameDialog.textContent = "Encuentra la Pokébola correcta para ganar...";
+            
+            let items = [];
+            for(let i=0; i<19; i++) {
+                items.push(balls[Math.floor(Math.random() * (balls.length - 1))]); 
+            }
+            items.push('🔴'); 
+            
+            items.sort(() => Math.random() - 0.5);
+
+            items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'poke-item';
+                el.textContent = item;
+                
+                el.addEventListener('click', () => {
+                    if(item === '🔴') {
+                        gameDialog.textContent = "¡Lo lograste! ¡Atrapaste mi corazón! ❤️";
+                        setTimeout(() => showScreen('screen-hub'), 2500);
+                    } else {
+                        const fallos = [
+                            "¡Esa no es! Tú puedes, inténtalo de nuevo.",
+                            "Mmm... esta Pokébola está vacía.",
+                            "¡Casi! Sigue buscando."
+                        ];
+                        gameDialog.textContent = fallos[Math.floor(Math.random() * fallos.length)];
+                    }
+                });
+                grid.appendChild(el);
+            });
+        }
+    </script>
+</body>
+</html>

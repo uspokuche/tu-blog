@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portal del Destino - Angélica</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: radial-gradient(circle at center, #1a0b2e 0%, #05020a 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: 'Montserrat', sans-serif;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative; color: white;
+            padding: 40px 0;
+        }
+
+        /* --- FONDO ESTELAR ANIMADO --- */
+        #particles-canvas {
+            position: fixed; 
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1; pointer-events: none;
+        }
+
+        /* --- COMPONENTES GLASSMORPHISM --- */
+        .glass-panel {
+            position: relative;
+            z-index: 50;
+            background: rgba(20, 10, 30, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 90%; max-width: 450px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 20px rgba(255, 51, 102, 0.1);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cursive-title {
+            font-family: 'Dancing Script', cursive;
+            color: #ff3366; font-size: 2.5rem;
+            margin-bottom: 20px; text-shadow: 0 0 15px rgba(255, 51, 102, 0.5);
+        }
+
+        /* --- PANTALLAS (LOGIN Y CONTADOR) --- */
+        #login-screen p, #countdown-screen p { font-size: 0.95rem; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
+        
+        .date-input-container { position: relative; margin-bottom: 25px; }
+        
+        input[type="date"] {
+            width: 100%; padding: 15px;
+            border-radius: 12px; border: 2px solid #ff3366;
+            background: rgba(0, 0, 0, 0.6); color: white;
+            font-size: 1.1rem; text-align: center; outline: none;
+            color-scheme: dark; transition: box-shadow 0.3s;
+        }
+        input[type="date"]:focus { box-shadow: 0 0 15px rgba(255, 51, 102, 0.4); }
+
+        #error-msg {
+            color: #ff4444; font-size: 0.9rem; margin-bottom: 15px;
+            display: none; font-weight: bold; animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* ESTILOS DEL CONTADOR */
+        #countdown-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .timer-box {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 51, 102, 0.8);
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        /* --- PANTALLA 2: HUB PRINCIPAL --- */
+        #hub-screen { display: none; width: 100%; max-width: 1000px; z-index: 10; padding: 20px; }
+        #hub-screen.active { display: flex; flex-direction: column; align-items: center; animation: fadeIn 1s ease forwards; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px; width: 100%; margin-top: 30px;
+        }
+
+        .gift-card {
+            background: rgba(25, 15, 35, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px; padding: 30px 20px;
+            text-align: center; cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative; overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .gift-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,51,102,0.1) 0%, transparent 70%);
+            opacity: 0; transition: opacity 0.4s; pointer-events: none;
+        }
+
+        .gift-card:hover { transform: translateY(-10px); border-color: #ff3366; box-shadow: 0 15px 30px rgba(255,51,102,0.2); }
+        .gift-card:hover::before { opacity: 1; }
+
+        .gift-icon { font-size: 3.5rem; margin-bottom: 15px; display: inline-block; transition: transform 0.3s; }
+        .gift-card:hover .gift-icon { transform: scale(1.1) rotate(5deg); }
+        
+        .gift-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: #fff; }
+        .gift-desc { font-size: 0.85rem; color: #aaa; line-height: 1.4; }
+
+        /* Estilos de tarjetas bloqueadas/deshabilitadas */
+        .gift-card.locked { border-color: rgba(255, 215, 0, 0.3); }
+        .gift-card.locked .gift-icon { filter: grayscale(100%); }
+        .gift-card.disabled { opacity: 0.3; pointer-events: none; filter: grayscale(100%); }
+        .gift-card.chosen { border-color: #2ecc71; box-shadow: 0 0 20px rgba(46, 204, 113, 0.3); }
+
+        /* --- MODALES (CONFIRMACIÓN Y ALERTAS) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+            display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+
+        .modal-box {
+            background: linear-gradient(135deg, #1f0d2b, #11051a);
+            border: 2px solid #ff3366; border-radius: 20px;
+            padding: 40px 30px; width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 0 40px rgba(255, 51, 102, 0.4);
+            animation: pulseModal 2s infinite alternate;
+        }
+
+        @keyframes pulseModal { from { box-shadow: 0 0 20px rgba(255,51,102,0.2); } to { box-shadow: 0 0 40px rgba(255,51,102,0.6); } }
+
+        .modal-box h3 { color: #ff3366; margin-bottom: 15px; font-size: 1.5rem; }
+        .modal-box p { color: #ddd; font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px; }
+
+        /* BOTONES */
+        .btn-action {
+            background: linear-gradient(45deg, #ff3366, #cc0033);
+            border: none; border-radius: 50px; color: white;
+            padding: 15px 30px; font-size: 1rem; font-weight: bold;
+            cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px;
+            width: 100%; margin-bottom: 10px;
+        }
+        .btn-action:hover { box-shadow: 0 0 20px rgba(255, 51, 102, 0.5); transform: scale(1.02); }
+        .btn-action:active { transform: scale(0.95); }
+        
+        .btn-cancel { background: transparent; border: 1px solid #777; }
+        .btn-cancel:hover { background: rgba(255,255,255,0.1); box-shadow: none; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particles-canvas"></canvas>
+
+    <div id="login-screen" class="glass-panel">
+        <h1 class="cursive-title">Nuestro Portal</h1>
+        <p>Solo quien conoce la fecha en la que comenzó nuestra magia puede entrar.</p>
+        <p id="error-msg">Fecha incorrecta. Piensa bien...</p>
+        
+        <div class="date-input-container">
+            <input type="date" id="magic-date">
+        </div>
+        
+        <button class="btn-action" id="btn-unlock">Desbloquear 🗝️</button>
+    </div>
+
+    <div id="countdown-screen" class="glass-panel">
+        <h1 class="cursive-title">Aún no es hora ✨</h1>
+        <p>La magia se está preparando. Podrás acceder a tus regalos cuando el contador llegue a cero (el 18 de este mes).</p>
+        <div class="timer-box" id="timer-display">00d 00h 00m 00s</div>
+    </div>
+
+    <div id="hub-screen">
+        <h1 class="cursive-title" style="font-size: 3rem;">Tus Regalos, Angélica</h1>
+        <p style="color: #ccc; text-align: center; max-width: 600px; margin: 0 auto; line-height: 1.5;">
+            El destino te ha traído aquí. Tienes frente a ti dos regalos de cumple mes, pero <strong>solo puedes elegir uno</strong>. Piénsalo bien, porque el otro se desvanecerá para siempre.
+        </p>
+
+        <div class="cards-grid">
+            <div class="gift-card" id="card-cubo" onclick="triggerChoice('cubo')">
+                <span class="gift-icon">🧊</span>
+                <h3 class="gift-title">El Cubo del Amor</h3>
+                <p class="gift-desc">Un recuerdo tridimensional de nosotros. (Regalo Cumple Mes)</p>
+            </div>
+
+            <div class="gift-card" id="card-pixel" onclick="triggerChoice('pixel')">
+                <span class="gift-icon">🕹️</span>
+                <h3 class="gift-title">Aventura Retro</h3>
+                <p class="gift-desc">Un universo pixelado hecho a tu medida. (Regalo Cumple Mes)</p>
+            </div>
+
+            <div class="gift-card locked" id="card-cumple" onclick="checkBirthday()">
+                <span class="gift-icon">🎂</span>
+                <h3 class="gift-title" style="color: #ffd700;">Cumpleaños Angélica</h3>
+                <p class="gift-desc">El premio mayor. Protegido por las estrellas hasta agosto.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="choice-modal">
+        <div class="modal-box">
+            <h3>¡Espera un momento! ⚠️</h3>
+            <p>Toda elección conlleva un sacrificio. Si eliges este regalo, <strong>el otro se bloqueará para siempre</strong> y no podrás verlo nunca más.<br><br>¿Es esta tu decisión final, mi amor?</p>
+            <button class="btn-action" id="btn-confirm-choice">SÍ, ESTOY SEGURA ✨</button>
+            <button class="btn-action btn-cancel" onclick="closeModal('choice-modal')">No, déjame pensarlo 🤔</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="birthday-modal">
+        <div class="modal-box" style="border-color: #ffd700; animation: none; box-shadow: 0 0 30px rgba(255,215,0,0.3);">
+            <h3 style="color: #ffd700;">Aún no es tiempo ⏳</h3>
+            <p>Este regalo está sellado mágicamente. Las estrellas indican que debes esperar hasta <strong>agosto</strong> para poder abrirlo. ¡La paciencia tendrá su recompensa!</p>
+            <button class="btn-action" style="background: #ffd700; color: #000;" onclick="closeModal('birthday-modal')">Entendido 🥺</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN DE FIREBASE (Reemplaza con tus datos reales) ---
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY_AQUI",
+            authDomain: "TU_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_PROJECT_ID.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- LÓGICA DE ACCESO (LOGIN) ---
+        const SECRET_DATE_USER = '2026-05-18'; // Clave de Angélica
+        const SECRET_DATE_DEV = '2026-03-26';  // Tu clave Maestra (Backdoor)
+        
+        let timerInterval;
+        let fechaServidorGlobal = null;
+
+        // Servidor de hora remoto (Evita que altere el reloj de su celular)
+        async function getNetworkTime() {
+            try {
+                const response = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
+                if(!response.ok) return null;
+                const data = await response.json();
+                return new Date(data.datetime);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function getTargetDate(baseDate) {
+            return new Date(baseDate.getFullYear(), baseDate.getMonth(), 18, 0, 0, 0);
+        }
+
+        function startSecureTimer() {
+            const targetDate = getTargetDate(fechaServidorGlobal);
+            
+            updateTimerDisplay(targetDate);
+            timerInterval = setInterval(() => {
+                fechaServidorGlobal.setSeconds(fechaServidorGlobal.getSeconds() + 1); // El reloj simula avanzar de forma interna
+                updateTimerDisplay(targetDate);
+            }, 1000);
+        }
+
+        function updateTimerDisplay(targetDate) {
+            const diff = targetDate - fechaServidorGlobal;
+
+            if (diff <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('countdown-screen').style.display = 'none';
+                document.getElementById('hub-screen').classList.add('active');
+                checkExistingChoice();
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / 1000 / 60) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            const dStr = days.toString().padStart(2, '0');
+            const hStr = hours.toString().padStart(2, '0');
+            const mStr = minutes.toString().padStart(2, '0');
+            const sStr = seconds.toString().padStart(2, '0');
+
+            document.getElementById('timer-display').innerText = `${dStr}d ${hStr}h ${mStr}m ${sStr}s`;
+        }
+
+        document.getElementById('btn-unlock').addEventListener('click', async () => {
+            const inputDate = document.getElementById('magic-date').value;
+            const loginScreen = document.getElementById('login-screen');
+            const hubScreen = document.getElementById('hub-screen');
+            const countdownScreen = document.getElementById('countdown-screen');
+            const errorMsg = document.getElementById('error-msg');
+
+            errorMsg.style.display = 'none';
+
+            if (inputDate === SECRET_DATE_USER || inputDate === SECRET_DATE_DEV) {
+                
+                if (inputDate === SECRET_DATE_USER) {
+                    document.getElementById('btn-unlock').innerText = "Sincronizando... ⏳";
+                    fechaServidorGlobal = await getNetworkTime();
+                    document.getElementById('btn-unlock').innerText = "Desbloquear 🗝️";
+                    
+                    if (!fechaServidorGlobal) {
+                        errorMsg.innerText = "Error de sincronización segura. Requiere internet.";
+                        errorMsg.style.display = 'block';
+                        return;
+                    }
+                }
+
+                loginScreen.style.transform = 'scale(1.1)';
+                loginScreen.style.opacity = '0';
+                
+                setTimeout(() => {
+                    loginScreen.style.display = 'none';
+
+                    if (inputDate === SECRET_DATE_DEV) {
+                        hubScreen.classList.add('active');
+                        checkExistingChoice();
+                    } else {
+                        const targetDate = getTargetDate(fechaServidorGlobal);
+
+                        if (fechaServidorGlobal < targetDate) {
+                            countdownScreen.style.display = 'flex';
+                            startSecureTimer();
+                        } else {
+                            hubScreen.classList.add('active');
+                            checkExistingChoice();
+                        }
+                    }
+                }, 800);
+            } else {
+                errorMsg.innerText = "Fecha incorrecta. Piensa bien...";
+                errorMsg.style.display = 'block';
+                loginScreen.style.animation = 'none';
+                loginScreen.offsetHeight;
+                loginScreen.style.animation = 'shake 0.4s';
+            }
+        });
+
+        // --- LÓGICA DE ELECCIÓN ÚNICA PERMANENTE (FIREBASE) ---
+        let selectedGiftTemp = "";
+
+        function checkExistingChoice() {
+            db.ref('proyecto_magico/eleccion').once('value', (snapshot) => {
+                const chosenGift = snapshot.val();
+                if (chosenGift) {
+                    localStorage.setItem('angelica_cumplemes_choice', chosenGift);
+                }
+                
+                if (chosenGift === 'cubo') {
+                    document.getElementById('card-pixel').classList.add('disabled');
+                    document.getElementById('card-cubo').classList.add('chosen');
+                    document.getElementById('card-cubo').onclick = () => window.location.href = 'cubo.html';
+                } else if (chosenGift === 'pixel') {
+                    document.getElementById('card-cubo').classList.add('disabled');
+                    document.getElementById('card-pixel').classList.add('chosen');
+                    document.getElementById('card-pixel').onclick = () => window.location.href = 'pixel.html';
+                }
+            });
+        }
+
+        function triggerChoice(giftType) {
+            db.ref('proyecto_magico/eleccion').once('value', (snapshot) => {
+                if (snapshot.val()) return; // Si ya hay algo guardado, bloquear clicks
+                selectedGiftTemp = giftType;
+                document.getElementById('choice-modal').style.display = 'flex';
+            });
+        }
+
+        document.getElementById('btn-confirm-choice').addEventListener('click', () => {
+            // Transacción atómica en Firebase para prevenir escrituras dobles simultáneas
+            db.ref('proyecto_magico/eleccion').transaction((currentData) => {
+                if (currentData === null) {
+                    return selectedGiftTemp;
+                }
+                return; 
+            }, (error, committed) => {
+                if (committed) {
+                    localStorage.setItem('angelica_cumplemes_choice', selectedGiftTemp);
+                    window.location.href = selectedGiftTemp === 'cubo' ? 'cubo.html' : 'pixel.html';
+                } else {
+                    alert("Esta elección ya fue tomada o no se pudo procesar.");
+                    closeModal('choice-modal');
+                    checkExistingChoice();
+                }
+            });
+        });
+
+        // --- LÓGICA DE CUMPLEAÑOS (BLOQUEO SEGURO POR MES) ---
+        function checkBirthday() {
+            const fecha = fechaServidorGlobal || new Date();
+            const currentMonth = fecha.getMonth(); // Enero es 0, Agosto es 7
+            
+            if (currentMonth >= 7) { 
+                window.location.href = 'cumple.html';
+            } else {
+                document.getElementById('birthday-modal').style.display = 'flex';
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // --- SISTEMA DE PARTÍCULAS (FONDO CÓSMICO) ---
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        const particles = [];
+
+        function resizeCanvas() {
+            width = window.innerWidth; height = window.innerHeight;
+            canvas.width = width; canvas.height = height;
+        }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+        class Star {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 2;
+                this.speed = Math.random() * 0.5 + 0.1;
+                this.alpha = Math.random();
+                this.alphaChange = (Math.random() * 0.02) - 0.01;
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < 0) { this.y = height; this.x = Math.random() * width; }
+                this.alpha += this.alphaChange;
+                if (this.alpha <= 0.1 || this.alpha >= 1) this.alphaChange *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 150; i++) particles.push(new Star());
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+    </script>
+</body>
+</html>
