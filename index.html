@@ -248,14 +248,16 @@
         let timerInterval;
         let fechaServidorGlobal = null;
 
+        // PLAN B IMPLEMENTADO AQUÍ: Si falla la red, usa la hora local.
         async function getNetworkTime() {
             try {
                 const response = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
-                if(!response.ok) return null;
+                if(!response.ok) throw new Error("API Falló");
                 const data = await response.json();
                 return new Date(data.datetime);
             } catch (e) {
-                return null;
+                console.warn("Usando reloj interno por bloqueo de red");
+                return new Date(); // Fallback para que nunca dé error
             }
         }
 
@@ -312,14 +314,8 @@
                 
                 if (inputDate === SECRET_DATE_USER) {
                     btnUnlock.innerText = "Sincronizando... ⏳";
-                    fechaServidorGlobal = await getNetworkTime();
+                    fechaServidorGlobal = await getNetworkTime(); // Siempre devolverá una fecha ahora
                     btnUnlock.innerText = "Desbloquear 🗝️";
-                    
-                    if (!fechaServidorGlobal) {
-                        errorMsg.innerText = "Error de conexión segura. Requiere internet.";
-                        errorMsg.style.display = 'block';
-                        return;
-                    }
                 }
 
                 loginScreen.style.transform = 'scale(1.1)';
@@ -335,7 +331,7 @@
                     } else {
                         const targetDate = getTargetDate();
 
-                        // Con la clave 18 de mayo (SECRET_DATE_USER) entra a evaluar si falta para el 18 de julio
+                        // Con la clave 18 de mayo entra a evaluar si falta para el 18 de julio
                         if (fechaServidorGlobal < targetDate) {
                             countdownScreen.style.display = 'flex';
                             startSecureTimer();
