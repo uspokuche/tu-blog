@@ -335,6 +335,7 @@
                     } else {
                         const targetDate = getTargetDate();
 
+                        // Con la clave 18 de mayo (SECRET_DATE_USER) entra a evaluar si falta para el 18 de julio
                         if (fechaServidorGlobal < targetDate) {
                             countdownScreen.style.display = 'flex';
                             startSecureTimer();
