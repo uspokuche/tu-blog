@@ -205,6 +205,9 @@
                 <p class="gift-desc">El premio mayor. Protegido por las estrellas hasta agosto.</p>
             </div>
         </div>
+        <button id="btn-reset" class="btn-action" style="background: #cc0000; border: none; margin-top: 30px; display: none;">
+    Reiniciar Memoria (Admin) 🔄
+</button>
     </div>
 
     <div class="modal-overlay" id="choice-modal">
@@ -226,7 +229,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyCygxBrMb1p8hHPhG_54kXeuHc6GVKYr8c",
@@ -307,11 +310,17 @@
             const countdownScreen = document.getElementById('countdown-screen');
             const errorMsg = document.getElementById('error-msg');
             const btnUnlock = document.getElementById('btn-unlock');
+            const btnReset = document.getElementById('btn-reset');
 
             errorMsg.style.display = 'none';
 
             if (inputDate === SECRET_DATE_USER || inputDate === SECRET_DATE_DEV) {
-                
+                if (inputDate === SECRET_DATE_DEV) {
+                   btnReset.style.display = 'block'; // Mostrar solo si es el admin
+                 } else {
+                    btnReset.style.display = 'none'; // Ocultar si es el usuario normal
+                }
+
                 if (inputDate === SECRET_DATE_USER) {
                     btnUnlock.innerText = "Sincronizando... ⏳";
                     fechaServidorGlobal = await getNetworkTime(); // Siempre devolverá una fecha ahora
@@ -455,6 +464,19 @@
             requestAnimationFrame(animateParticles);
         }
         animateParticles();
+        document.getElementById('btn-reset').addEventListener('click', async () => {
+            if(confirm("¿Estás seguro de que quieres borrar la elección y reiniciar el juego?")) {
+                try {
+                    // Asegúrate de usar la ruta correcta a tu base de datos
+                    const dbRef = ref(db, 'proyecto_magico/eleccion'); 
+                    await remove(dbRef);
+                    alert("Memoria borrada. Recargando...");
+                    window.location.reload();
+                 } catch (error) {
+                     alert("Error al borrar: " + error.message);
+                }
+            }   
+        });         
     </script>
 </body>
 </html>
