@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Regalo Retro - Feliz Cumpleaños</title>
+    <title>Regalo Retro - Feliz Cumple Mes</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* BLINDAJE: Oculto por defecto para control anti-URL directa */
         body {
+            /* BLINDAJE: Oculto hasta que Firebase apruebe la entrada */
             display: none;
             background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'); 
             background-size: cover;
@@ -100,64 +96,41 @@
         .cursor { animation: blink 1s step-end infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        .hub-icons {
-            display: flex; gap: 30px; margin-bottom: 150px;
-        }
+        .hub-icons { display: flex; gap: 30px; margin-bottom: 150px; }
 
         .icon-btn {
             background: rgba(0, 0, 0, 0.6);
-            border: 4px solid #fff;
-            font-size: 2.5rem;
-            padding: 20px;
-            cursor: pointer;
-            box-shadow: 4px 4px 0px #000;
-            transition: transform 0.2s;
+            border: 4px solid #fff; font-size: 2.5rem;
+            padding: 20px; cursor: pointer;
+            box-shadow: 4px 4px 0px #000; transition: transform 0.2s;
         }
 
-        .icon-btn:hover { transform: scale(1.1) background: rgba(255, 255, 255, 0.2); }
+        .icon-btn:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.2); }
 
         .paper-letter {
-            background-color: #fdf6e3;
-            color: #333;
-            width: 90%; max-width: 600px;
-            padding: 40px;
-            border: 2px solid #ccc;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
+            background-color: #fdf6e3; color: #333;
+            width: 90%; max-width: 600px; padding: 40px;
+            border: 2px solid #ccc; box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
             font-family: 'Courier New', Courier, monospace;
-            font-size: 1.2rem;
-            font-weight: bold;
-            line-height: 1.6;
-            text-align: left;
+            font-size: 1.2rem; font-weight: bold; line-height: 1.6; text-align: left;
             position: relative;
             background-image: repeating-linear-gradient(transparent, transparent 31px, #add8e6 31px, #add8e6 32px);
             margin-bottom: 20px;
         }
-        .paper-letter::before {
-            content: ''; position: absolute; top: 0; left: 30px; bottom: 0; width: 2px; background-color: #ffb6c1;
-        }
+        .paper-letter::before { content: ''; position: absolute; top: 0; left: 30px; bottom: 0; width: 2px; background-color: #ffb6c1; }
 
         .grid-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            margin-bottom: 120px;
+            display: grid; grid-template-columns: repeat(5, 1fr);
+            gap: 15px; margin-bottom: 120px;
         }
-        .poke-item {
-            font-size: 2rem; cursor: pointer; transition: transform 0.1s;
-        }
+        .poke-item { font-size: 2rem; cursor: pointer; transition: transform 0.1s; }
         .poke-item:hover { transform: scale(1.2); }
 
         .pokemon-card {
-            background-color: #f8d030; 
-            width: 320px;
-            border: 10px solid #e8b000;
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.6);
-            color: #000;
-            font-family: 'Arial', sans-serif;
-            text-align: left;
-            position: relative;
+            background-color: #f8d030; width: 320px;
+            border: 10px solid #e8b000; border-radius: 15px; padding: 15px;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.6); color: #000;
+            font-family: 'Arial', sans-serif; text-align: left; position: relative;
         }
         
         .card-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; }
@@ -165,8 +138,11 @@
         
         .card-image-container {
             background: #fff; border: 4px solid #999;
-            height: 150px; display: flex; justify-content: center; align-items: center;
-            font-size: 5rem; margin-bottom: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            height: 150px; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .card-image-container img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
         }
 
         .card-attack {
@@ -190,7 +166,7 @@
     <audio id="bgm" src="cancion.mp3" loop></audio>
 
     <div id="screen-welcome" class="screen active">
-        <h1 class="title">FELIZ CUMPLEAÑOS MI VIDA<br><br>¿Quieres ver tu regalo?</h1>
+        <h1 class="title">FELIZ CUMPLE MES.<br><br>¿Quieres ver tu regalo?</h1>
         <div>
             <button class="btn-retro btn-green" id="btn-yes">SÍIII</button>
             <button class="btn-retro btn-red" id="btn-no">NO</button>
@@ -232,7 +208,9 @@
                 <span>Amor Mío</span>
                 <span class="card-hp">100 HP ❤️</span>
             </div>
-            <div class="card-image-container">💖</div>
+            <div class="card-image-container">
+                <img src="ella.jpg" alt="Foto de mi novia">
+            </div>
             <div style="font-size: 0.7rem; font-style: italic; text-align: center; margin-bottom: 10px;">
                 Pokémon Compañera de Vida
             </div>
@@ -253,58 +231,52 @@
         <button class="btn-retro" style="margin-top: 30px;" onclick="showScreen('screen-hub')">GUARDAR CARTA</button>
     </div>
 
-    <script>
-        // --- CONFIGURACIÓN DE FIREBASE (Usa los mismos datos del index) ---
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
         const firebaseConfig = {
-            apiKey: "TU_API_KEY_AQUI",
-            authDomain: "TU_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_PROJECT_ID.appspot.com",
-            messagingSenderId: "TU_SENDER_ID",
-            appId: "TU_APP_ID"
+          apiKey: "AIzaSyCygxBrMb1p8hHPhG_54kXeuHc6GVKYr8c",
+          authDomain: "regalo-angelica.firebaseapp.com",
+          databaseURL: "https://regalo-angelica-default-rtdb.firebaseio.com/",
+          projectId: "regalo-angelica",
+          storageBucket: "regalo-angelica.firebasestorage.app",
+          messagingSenderId: "246150161010",
+          appId: "1:246150161010:web:23145387bf939b750918eb"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
 
-        // --- MOTOR DE CONTROL DE RUTA RETRO ---
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- SISTEMA ANTI-TRAMPAS SIMPLIFICADO Y EFICAZ ---
         async function validarAccesoDirecto() {
+            const dbRef = ref(db, 'proyecto_magico/eleccion');
             try {
-                const res = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
-                if(!res.ok) throw new Error();
-                const data = await res.json();
-                const fecha = new Date(data.datetime);
-                
-                if (fecha.getDate() < 18) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-            } catch(e) {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            db.ref('proyecto_magico/eleccion').once('value', (snapshot) => {
+                const snapshot = await get(dbRef);
                 const eleccion = snapshot.val();
+                
                 if (eleccion === 'pixel') {
-                    document.body.style.display = 'flex'; // Revelar cuerpo (es flex)
+                    document.body.style.display = 'flex'; 
                 } else {
-                    window.location.href = 'index.html';
+                    window.location.href = 'index.html'; 
                 }
-            });
+            } catch (error) {
+                window.location.href = 'index.html';
+            }
         }
         validarAccesoDirecto();
 
-        // --- NAVEGACIÓN DE PANTALLAS ---
+        // --- LOGICA ORIGINAL RETRO ---
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
 
-        // --- PANTALLA DE INICIO ---
+        window.showScreen = showScreen;
+
         document.getElementById('btn-yes').addEventListener('click', () => {
             const audio = document.getElementById('bgm');
-            audio.play().catch(e => console.log("Audio requiere interacción previa"));
+            audio.play().catch(e => console.log("Audio requiere interacción"));
             showScreen('screen-hub');
             startHubDialogues();
         });
@@ -313,13 +285,12 @@
             alert("Opción incorrecta. ¡Inténtalo de nuevo! 😠❤️");
         });
 
-        // --- SISTEMA DE DIÁLOGOS DEL HUB ---
         const hubPhrases = [
-            "Amo cómo se ven tus ojitos cuando te ríes...",
-            "Amo lo inteligente que eres...",
-            "Me encanta abrazarte...",
+            "Me encanta cómo se ven tus ojitos cuando te ríes...",
+            "Me facina lo inteligente que eres... aveces jajaja",
+            "Me encanta Cuando me Abrazas...",
             "Tu sonrisa ilumina mi día entero...",
-            "Me fascina escucharte hablar de lo que te gusta..."
+            "Me Gusta Mucho escucharte hablar de lo que te gusta..."
         ];
         
         let phraseIndex = 0;
@@ -360,8 +331,7 @@
             }
         }
 
-        // --- CARTA ESCRITA (MÁQUINA DE ESCRIBIR) ---
-        const letterText = "Feliz Cumpleaños! Espero que tengas un día hermoso.\n\nEres una persona increíble y te mereces todo lo mejor del mundo.\n\nGracias por existir y llenarme de alegría.\n\nTe amo muchísimo.";
+        const letterText = "Feliz Cumple Mes! Espero que tengas un día hermoso.\n\nEres una persona increíble y te mereces todo lo mejor del mundo.\n\nGracias por existir y llenarme de alegría.\n\nTe Quiero muchísimo.";
         
         document.getElementById('btn-letter').addEventListener('click', () => {
             showScreen('screen-letter');
@@ -383,18 +353,16 @@
             typeLetter();
         });
 
-        // --- VER CARTA POKÉMON ---
         document.getElementById('btn-card').addEventListener('click', () => {
             showScreen('screen-card');
         });
 
-        // --- MINIJUEGO POKEBOLA ---
         document.getElementById('btn-game').addEventListener('click', () => {
             showScreen('screen-game');
             initGame();
         });
 
-        const balls = ['🏐', '🏀', '🔮', '⚾', '🎱', '⚽', '🎾', '🔴']; 
+        const balls = ['🏐', '🏀', '🔮', '⚾', '🎱', '⚽', '🎾', '🔴'];
         const gameDialog = document.getElementById('game-dialog');
 
         function initGame() {
@@ -404,9 +372,9 @@
             
             let items = [];
             for(let i=0; i<19; i++) {
-                items.push(balls[Math.floor(Math.random() * (balls.length - 1))]); 
+                items.push(balls[Math.floor(Math.random() * (balls.length - 1))]);
             }
-            items.push('🔴'); 
+            items.push('🔴');
             
             items.sort(() => Math.random() - 0.5);
 
