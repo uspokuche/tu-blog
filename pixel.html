@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Regalo Retro - Feliz Cumpleaños</title>
+    <title>Regalo Retro - Feliz Cumple Mes</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -138,8 +138,11 @@
         
         .card-image-container {
             background: #fff; border: 4px solid #999;
-            height: 150px; display: flex; justify-content: center; align-items: center;
-            font-size: 5rem; margin-bottom: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            height: 150px; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .card-image-container img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
         }
 
         .card-attack {
@@ -205,7 +208,9 @@
                 <span>Amor Mío</span>
                 <span class="card-hp">100 HP ❤️</span>
             </div>
-            <div class="card-image-container">💖</div>
+            <div class="card-image-container">
+                <img src="ella.jpg" alt="Foto de mi novia">
+            </div>
             <div style="font-size: 0.7rem; font-style: italic; text-align: center; margin-bottom: 10px;">
                 Pokémon Compañera de Vida
             </div>
