@@ -9,7 +9,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            /* BLINDAJE: Oculto hasta que Firebase apruebe la entrada */
             display: none;
             background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'); 
             background-size: cover;
@@ -138,7 +137,8 @@
         
         .card-image-container {
             background: #fff; border: 4px solid #999;
-            height: 150px; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            height: 250px; /* Altura aumentada para mejor visualización de la foto */
+            overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
         }
         
         .card-image-container img {
@@ -248,13 +248,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- SISTEMA ANTI-TRAMPAS SIMPLIFICADO Y EFICAZ ---
         async function validarAccesoDirecto() {
             const dbRef = ref(db, 'proyecto_magico/eleccion');
             try {
                 const snapshot = await get(dbRef);
                 const eleccion = snapshot.val();
-                
                 if (eleccion === 'pixel') {
                     document.body.style.display = 'flex'; 
                 } else {
@@ -266,7 +264,6 @@
         }
         validarAccesoDirecto();
 
-        // --- LOGICA ORIGINAL RETRO ---
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
