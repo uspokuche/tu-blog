@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal del Destino - Angélica</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -24,7 +20,6 @@
             padding: 40px 0;
         }
 
-        /* --- FONDO ESTELAR ANIMADO --- */
         #particles-canvas {
             position: fixed; 
             top: 0; left: 0;
@@ -32,7 +27,6 @@
             z-index: 1; pointer-events: none;
         }
 
-        /* --- COMPONENTES GLASSMORPHISM --- */
         .glass-panel {
             position: relative;
             z-index: 50;
@@ -53,7 +47,6 @@
             margin-bottom: 20px; text-shadow: 0 0 15px rgba(255, 51, 102, 0.5);
         }
 
-        /* --- PANTALLAS (LOGIN Y CONTADOR) --- */
         #login-screen p, #countdown-screen p { font-size: 0.95rem; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
         
         .date-input-container { position: relative; margin-bottom: 25px; }
@@ -78,7 +71,6 @@
             75% { transform: translateX(10px); }
         }
 
-        /* ESTILOS DEL CONTADOR */
         #countdown-screen {
             display: none;
             flex-direction: column;
@@ -93,7 +85,6 @@
             margin-bottom: 20px;
         }
 
-        /* --- PANTALLA 2: HUB PRINCIPAL --- */
         #hub-screen { display: none; width: 100%; max-width: 1000px; z-index: 10; padding: 20px; }
         #hub-screen.active { display: flex; flex-direction: column; align-items: center; animation: fadeIn 1s ease forwards; }
 
@@ -129,13 +120,11 @@
         .gift-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: #fff; }
         .gift-desc { font-size: 0.85rem; color: #aaa; line-height: 1.4; }
 
-        /* Estilos de tarjetas bloqueadas/deshabilitadas */
         .gift-card.locked { border-color: rgba(255, 215, 0, 0.3); }
         .gift-card.locked .gift-icon { filter: grayscale(100%); }
         .gift-card.disabled { opacity: 0.3; pointer-events: none; filter: grayscale(100%); }
         .gift-card.chosen { border-color: #2ecc71; box-shadow: 0 0 20px rgba(46, 204, 113, 0.3); }
 
-        /* --- MODALES (CONFIRMACIÓN Y ALERTAS) --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
@@ -155,7 +144,6 @@
         .modal-box h3 { color: #ff3366; margin-bottom: 15px; font-size: 1.5rem; }
         .modal-box p { color: #ddd; font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px; }
 
-        /* BOTONES */
         .btn-action {
             background: linear-gradient(45deg, #ff3366, #cc0033);
             border: none; border-radius: 50px; color: white;
@@ -168,7 +156,6 @@
         
         .btn-cancel { background: transparent; border: 1px solid #777; }
         .btn-cancel:hover { background: rgba(255,255,255,0.1); box-shadow: none; }
-
     </style>
 </head>
 <body>
@@ -189,27 +176,27 @@
 
     <div id="countdown-screen" class="glass-panel">
         <h1 class="cursive-title">Aún no es hora ✨</h1>
-        <p>La magia se está preparando. Podrás acceder a tus regalos cuando el contador llegue a cero (el 18 de este mes).</p>
+        <p>La magia se está preparando. Podrás acceder a tus regalos cuando el contador llegue a cero (el 18 de julio).</p>
         <div class="timer-box" id="timer-display">00d 00h 00m 00s</div>
     </div>
 
     <div id="hub-screen">
         <h1 class="cursive-title" style="font-size: 3rem;">Tus Regalos, Angélica</h1>
         <p style="color: #ccc; text-align: center; max-width: 600px; margin: 0 auto; line-height: 1.5;">
-            El destino te ha traído aquí. Tienes frente a ti dos regalos de cumple mes, pero <strong>solo puedes elegir uno</strong>. Piénsalo bien, porque el otro se desvanecerá para siempre.
+            El destino te ha traído aquí. Tienes frente a ti dos regalos, pero <strong>solo puedes elegir uno</strong>. Piénsalo bien, porque el otro se desvanecerá para siempre.
         </p>
 
         <div class="cards-grid">
             <div class="gift-card" id="card-cubo" onclick="triggerChoice('cubo')">
                 <span class="gift-icon">🧊</span>
                 <h3 class="gift-title">El Cubo del Amor</h3>
-                <p class="gift-desc">Un recuerdo tridimensional de nosotros. (Regalo Cumple Mes)</p>
+                <p class="gift-desc">Un recuerdo tridimensional de nosotros.</p>
             </div>
 
             <div class="gift-card" id="card-pixel" onclick="triggerChoice('pixel')">
                 <span class="gift-icon">🕹️</span>
                 <h3 class="gift-title">Aventura Retro</h3>
-                <p class="gift-desc">Un universo pixelado hecho a tu medida. (Regalo Cumple Mes)</p>
+                <p class="gift-desc">Un universo pixelado hecho a tu medida.</p>
             </div>
 
             <div class="gift-card locked" id="card-cumple" onclick="checkBirthday()">
@@ -218,6 +205,9 @@
                 <p class="gift-desc">El premio mayor. Protegido por las estrellas hasta agosto.</p>
             </div>
         </div>
+        <button id="btn-reset" class="btn-action" style="background: #cc0000; border: none; margin-top: 30px; display: none;">
+    Reiniciar Memoria (Admin) 🔄
+</button>
     </div>
 
     <div class="modal-overlay" id="choice-modal">
@@ -237,49 +227,54 @@
         </div>
     </div>
 
-    <script>
-        // --- CONFIGURACIÓN DE FIREBASE (Reemplaza con tus datos reales) ---
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY_AQUI",
-            authDomain: "TU_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_PROJECT_ID.appspot.com",
-            messagingSenderId: "TU_SENDER_ID",
-            appId: "TU_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // --- LÓGICA DE ACCESO (LOGIN) ---
-        const SECRET_DATE_USER = '2026-05-18'; // Clave de Angélica
-        const SECRET_DATE_DEV = '2026-03-26';  // Tu clave Maestra (Backdoor)
+        const firebaseConfig = {
+          apiKey: "AIzaSyCygxBrMb1p8hHPhG_54kXeuHc6GVKYr8c",
+          authDomain: "regalo-angelica.firebaseapp.com",
+          databaseURL: "https://regalo-angelica-default-rtdb.firebaseio.com/",
+          projectId: "regalo-angelica",
+          storageBucket: "regalo-angelica.firebasestorage.app",
+          messagingSenderId: "246150161010",
+          appId: "1:246150161010:web:23145387bf939b750918eb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- LÓGICA DE ACCESO (LOGIN Y FECHAS) ---
+        const SECRET_DATE_USER = '2026-05-18'; // Clave de acceso de Angélica
+        const SECRET_DATE_DEV = '2026-03-26';  // Tu clave Maestra
         
         let timerInterval;
         let fechaServidorGlobal = null;
 
-        // Servidor de hora remoto (Evita que altere el reloj de su celular)
+        // PLAN B IMPLEMENTADO AQUÍ: Si falla la red, usa la hora local.
         async function getNetworkTime() {
             try {
                 const response = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
-                if(!response.ok) return null;
+                if(!response.ok) throw new Error("API Falló");
                 const data = await response.json();
                 return new Date(data.datetime);
             } catch (e) {
-                return null;
+                console.warn("Usando reloj interno por bloqueo de red");
+                return new Date(); // Fallback para que nunca dé error
             }
         }
 
-        function getTargetDate(baseDate) {
-            return new Date(baseDate.getFullYear(), baseDate.getMonth(), 18, 0, 0, 0);
+        // OBJETIVO: 18 de Julio de 2026 a las 00:00:00
+        function getTargetDate() {
+            return new Date(2026, 6, 18, 0, 0, 0); // Mes 6 en JS es Julio
         }
 
         function startSecureTimer() {
-            const targetDate = getTargetDate(fechaServidorGlobal);
+            const targetDate = getTargetDate();
             
             updateTimerDisplay(targetDate);
             timerInterval = setInterval(() => {
-                fechaServidorGlobal.setSeconds(fechaServidorGlobal.getSeconds() + 1); // El reloj simula avanzar de forma interna
+                fechaServidorGlobal.setSeconds(fechaServidorGlobal.getSeconds() + 1);
                 updateTimerDisplay(targetDate);
             }, 1000);
         }
@@ -314,21 +309,22 @@
             const hubScreen = document.getElementById('hub-screen');
             const countdownScreen = document.getElementById('countdown-screen');
             const errorMsg = document.getElementById('error-msg');
+            const btnUnlock = document.getElementById('btn-unlock');
+            const btnReset = document.getElementById('btn-reset');
 
             errorMsg.style.display = 'none';
 
             if (inputDate === SECRET_DATE_USER || inputDate === SECRET_DATE_DEV) {
-                
+                if (inputDate === SECRET_DATE_DEV) {
+                   btnReset.style.display = 'block'; // Mostrar solo si es el admin
+                 } else {
+                    btnReset.style.display = 'none'; // Ocultar si es el usuario normal
+                }
+
                 if (inputDate === SECRET_DATE_USER) {
-                    document.getElementById('btn-unlock').innerText = "Sincronizando... ⏳";
-                    fechaServidorGlobal = await getNetworkTime();
-                    document.getElementById('btn-unlock').innerText = "Desbloquear 🗝️";
-                    
-                    if (!fechaServidorGlobal) {
-                        errorMsg.innerText = "Error de sincronización segura. Requiere internet.";
-                        errorMsg.style.display = 'block';
-                        return;
-                    }
+                    btnUnlock.innerText = "Sincronizando... ⏳";
+                    fechaServidorGlobal = await getNetworkTime(); // Siempre devolverá una fecha ahora
+                    btnUnlock.innerText = "Desbloquear 🗝️";
                 }
 
                 loginScreen.style.transform = 'scale(1.1)';
@@ -338,11 +334,13 @@
                     loginScreen.style.display = 'none';
 
                     if (inputDate === SECRET_DATE_DEV) {
+                        // Acceso directo del programador salta el contador
                         hubScreen.classList.add('active');
                         checkExistingChoice();
                     } else {
-                        const targetDate = getTargetDate(fechaServidorGlobal);
+                        const targetDate = getTargetDate();
 
+                        // Con la clave 18 de mayo entra a evaluar si falta para el 18 de julio
                         if (fechaServidorGlobal < targetDate) {
                             countdownScreen.style.display = 'flex';
                             startSecureTimer();
@@ -361,60 +359,59 @@
             }
         });
 
-        // --- LÓGICA DE ELECCIÓN ÚNICA PERMANENTE (FIREBASE) ---
+        // --- LÓGICA DE ELECCIÓN ÚNICA EN LA NUBE ---
         let selectedGiftTemp = "";
 
-        function checkExistingChoice() {
-            db.ref('proyecto_magico/eleccion').once('value', (snapshot) => {
-                const chosenGift = snapshot.val();
-                if (chosenGift) {
-                    localStorage.setItem('angelica_cumplemes_choice', chosenGift);
+        async function checkExistingChoice() {
+            const dbRef = ref(db, 'proyecto_magico/eleccion');
+            try {
+                const snapshot = await get(dbRef);
+                if (snapshot.exists()) {
+                    const chosenGift = snapshot.val();
+                    if (chosenGift === 'cubo') {
+                        document.getElementById('card-pixel').classList.add('disabled');
+                        document.getElementById('card-cubo').classList.add('chosen');
+                        document.getElementById('card-cubo').onclick = () => window.location.href = 'cubo.html';
+                    } else if (chosenGift === 'pixel') {
+                        document.getElementById('card-cubo').classList.add('disabled');
+                        document.getElementById('card-pixel').classList.add('chosen');
+                        document.getElementById('card-pixel').onclick = () => window.location.href = 'pixel.html';
+                    }
                 }
-                
-                if (chosenGift === 'cubo') {
-                    document.getElementById('card-pixel').classList.add('disabled');
-                    document.getElementById('card-cubo').classList.add('chosen');
-                    document.getElementById('card-cubo').onclick = () => window.location.href = 'cubo.html';
-                } else if (chosenGift === 'pixel') {
-                    document.getElementById('card-cubo').classList.add('disabled');
-                    document.getElementById('card-pixel').classList.add('chosen');
-                    document.getElementById('card-pixel').onclick = () => window.location.href = 'pixel.html';
-                }
-            });
+            } catch (error) {
+                console.error("Error Firebase:", error);
+            }
         }
 
-        function triggerChoice(giftType) {
-            db.ref('proyecto_magico/eleccion').once('value', (snapshot) => {
-                if (snapshot.val()) return; // Si ya hay algo guardado, bloquear clicks
-                selectedGiftTemp = giftType;
-                document.getElementById('choice-modal').style.display = 'flex';
-            });
+        async function triggerChoice(giftType) {
+            const dbRef = ref(db, 'proyecto_magico/eleccion');
+            const snapshot = await get(dbRef);
+            if (snapshot.exists()) return; 
+
+            selectedGiftTemp = giftType;
+            document.getElementById('choice-modal').style.display = 'flex';
         }
 
-        document.getElementById('btn-confirm-choice').addEventListener('click', () => {
-            // Transacción atómica en Firebase para prevenir escrituras dobles simultáneas
-            db.ref('proyecto_magico/eleccion').transaction((currentData) => {
-                if (currentData === null) {
-                    return selectedGiftTemp;
-                }
-                return; 
-            }, (error, committed) => {
-                if (committed) {
-                    localStorage.setItem('angelica_cumplemes_choice', selectedGiftTemp);
+        document.getElementById('btn-confirm-choice').addEventListener('click', async () => {
+            const dbRef = ref(db, 'proyecto_magico/eleccion');
+            try {
+                const snapshot = await get(dbRef);
+                if (!snapshot.exists()) {
+                    await set(dbRef, selectedGiftTemp);
                     window.location.href = selectedGiftTemp === 'cubo' ? 'cubo.html' : 'pixel.html';
                 } else {
-                    alert("Esta elección ya fue tomada o no se pudo procesar.");
+                    alert("Esta elección ya fue tomada.");
                     closeModal('choice-modal');
                     checkExistingChoice();
                 }
-            });
+            } catch (error) {
+                alert("Hubo un problema al conectar con las estrellas. Inténtalo de nuevo.");
+            }
         });
 
-        // --- LÓGICA DE CUMPLEAÑOS (BLOQUEO SEGURO POR MES) ---
         function checkBirthday() {
             const fecha = fechaServidorGlobal || new Date();
-            const currentMonth = fecha.getMonth(); // Enero es 0, Agosto es 7
-            
+            const currentMonth = fecha.getMonth(); // 7 = Agosto
             if (currentMonth >= 7) { 
                 window.location.href = 'cumple.html';
             } else {
@@ -426,7 +423,11 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // --- SISTEMA DE PARTÍCULAS (FONDO CÓSMICO) ---
+        window.triggerChoice = triggerChoice;
+        window.checkBirthday = checkBirthday;
+        window.closeModal = closeModal;
+
+        // --- SISTEMA DE PARTÍCULAS ---
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
@@ -440,12 +441,9 @@
 
         class Star {
             constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.size = Math.random() * 2;
-                this.speed = Math.random() * 0.5 + 0.1;
-                this.alpha = Math.random();
-                this.alphaChange = (Math.random() * 0.02) - 0.01;
+                this.x = Math.random() * width; this.y = Math.random() * height;
+                this.size = Math.random() * 2; this.speed = Math.random() * 0.5 + 0.1;
+                this.alpha = Math.random(); this.alphaChange = (Math.random() * 0.02) - 0.01;
             }
             update() {
                 this.y -= this.speed;
@@ -454,21 +452,31 @@
                 if (this.alpha <= 0.1 || this.alpha >= 1) this.alphaChange *= -1;
             }
             draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`; ctx.fill();
             }
         }
 
         for (let i = 0; i < 150; i++) particles.push(new Star());
-
         function animateParticles() {
             ctx.clearRect(0, 0, width, height);
             particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animateParticles);
         }
         animateParticles();
+        document.getElementById('btn-reset').addEventListener('click', async () => {
+            if(confirm("¿Estás seguro de que quieres borrar la elección y reiniciar el juego?")) {
+                try {
+                    // Asegúrate de usar la ruta correcta a tu base de datos
+                    const dbRef = ref(db, 'proyecto_magico/eleccion'); 
+                    await remove(dbRef);
+                    alert("Memoria borrada. Recargando...");
+                    window.location.reload();
+                 } catch (error) {
+                     alert("Error al borrar: " + error.message);
+                }
+            }   
+        });         
     </script>
 </body>
 </html>
