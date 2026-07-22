@@ -125,6 +125,16 @@
         .gift-card.disabled { opacity: 0.3; pointer-events: none; filter: grayscale(100%); }
         .gift-card.chosen { border-color: #2ecc71; box-shadow: 0 0 20px rgba(46, 204, 113, 0.3); }
 
+        #bday-countdown {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
@@ -199,10 +209,12 @@
                 <p class="gift-desc">Un universo pixelado hecho a tu medida.</p>
             </div>
 
-            <div class="gift-card locked" id="card-cumple" onclick="checkBirthday('cumpleaños.html')">
+            <div class="gift-card locked" id="card-cumple" onclick="checkBirthday()">
                 <span class="gift-icon">🎂</span>
                 <h3 class="gift-title" style="color: #ffd700;">Cumpleaños Angélica</h3>
-                <p class="gift-desc">El premio mayor. Protegido por las estrellas hasta agosto.</p>
+                <p class="gift-desc">El premio mayor. Protegido por las estrellas hasta el 10 de agosto.</p>
+                <!-- Contenedor del reloj de cumpleaños -->
+                <div id="bday-countdown">Calculando...</div>
             </div>
         </div>
         <button id="btn-reset" class="btn-action" style="background: #cc0000; border: none; margin-top: 30px; display: none;">
@@ -222,7 +234,7 @@
     <div class="modal-overlay" id="birthday-modal">
         <div class="modal-box" style="border-color: #ffd700; animation: none; box-shadow: 0 0 30px rgba(255,215,0,0.3);">
             <h3 style="color: #ffd700;">Aún no es tiempo ⏳</h3>
-            <p>Este regalo está sellado mágicamente. Las estrellas indican que debes esperar hasta <strong>agosto</strong> para poder abrirlo. ¡La paciencia tendrá su recompensa!</p>
+            <p>Este regalo está sellado mágicamente. Las estrellas indican que debes esperar hasta el <strong>10 de agosto</strong> para poder abrirlo. ¡La paciencia tendrá su recompensa!</p>
             <button class="btn-action" style="background: #ffd700; color: #000;" onclick="closeModal('birthday-modal')">Entendido 🥺</button>
         </div>
     </div>
@@ -247,11 +259,12 @@
         // --- LÓGICA DE ACCESO (LOGIN Y FECHAS) ---
         const SECRET_DATE_USER = '2026-05-18'; // Clave de acceso de Angélica
         const SECRET_DATE_DEV = '2026-03-26';  // Tu clave Maestra
+        const TARGET_BDAY = new Date(2026, 7, 10, 0, 0, 0); // 10 de Agosto de 2026 (El mes 7 en JS es Agosto)
         
-        let timerInterval;
+        let globalClockInterval;
         let fechaServidorGlobal = null;
+        let isAdmin = false; // Variable para identificar si es el desarrollador
 
-        // PLAN B IMPLEMENTADO AQUÍ: Si falla la red, usa la hora local.
         async function getNetworkTime() {
             try {
                 const response = await fetch('https://worldtimeapi.org/api/timezone/America/Caracas');
@@ -260,47 +273,64 @@
                 return new Date(data.datetime);
             } catch (e) {
                 console.warn("Usando reloj interno por bloqueo de red");
-                return new Date(); // Fallback para que nunca dé error
+                return new Date(); 
             }
         }
 
-        // OBJETIVO: 18 de Julio de 2026 a las 00:00:00
+        // OBJETIVO INICIAL: 18 de Julio de 2026
         function getTargetDate() {
-            return new Date(2026, 6, 18, 0, 0, 0); // Mes 6 en JS es Julio
+            return new Date(2026, 6, 18, 0, 0, 0);
         }
 
-        function startSecureTimer() {
-            const targetDate = getTargetDate();
+        // Reloj maestro único que maneja todas las cuentas regresivas simultáneamente
+        function startMasterClock() {
+            if (globalClockInterval) clearInterval(globalClockInterval);
             
-            updateTimerDisplay(targetDate);
-            timerInterval = setInterval(() => {
+            globalClockInterval = setInterval(() => {
+                if (!fechaServidorGlobal) return;
+                
                 fechaServidorGlobal.setSeconds(fechaServidorGlobal.getSeconds() + 1);
-                updateTimerDisplay(targetDate);
+
+                // 1. Actualizar cuenta regresiva principal (si la pantalla está visible)
+                if (document.getElementById('countdown-screen').style.display !== 'none') {
+                    const targetDate = getTargetDate();
+                    const diff = targetDate - fechaServidorGlobal;
+                    
+                    if (diff <= 0) {
+                        document.getElementById('countdown-screen').style.display = 'none';
+                        document.getElementById('hub-screen').classList.add('active');
+                        checkExistingChoice();
+                    } else {
+                        updateTimerDisplayStr(diff, 'timer-display', false);
+                    }
+                }
+
+                // 2. Actualizar cuenta regresiva del Cumpleaños (si el Hub está visible)
+                if (document.getElementById('hub-screen').classList.contains('active')) {
+                    const bdayDiff = TARGET_BDAY - fechaServidorGlobal;
+                    
+                    if (bdayDiff <= 0 || isAdmin) {
+                        document.getElementById('bday-countdown').innerText = isAdmin ? "Acceso Admin Habilitado 🔓" : "¡Ya puedes abrirlo! 🎉";
+                        document.getElementById('card-cumple').classList.remove('locked');
+                    } else {
+                        document.getElementById('card-cumple').classList.add('locked');
+                        updateTimerDisplayStr(bdayDiff, 'bday-countdown', true);
+                    }
+                }
             }, 1000);
         }
 
-        function updateTimerDisplay(targetDate) {
-            const diff = targetDate - fechaServidorGlobal;
-
-            if (diff <= 0) {
-                clearInterval(timerInterval);
-                document.getElementById('countdown-screen').style.display = 'none';
-                document.getElementById('hub-screen').classList.add('active');
-                checkExistingChoice();
-                return;
-            }
-
+        function updateTimerDisplayStr(diff, elementId, isSmallTimer = false) {
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((diff / 1000 / 60) % 60);
-            const seconds = Math.floor((diff / 1000) % 60);
-
-            const dStr = days.toString().padStart(2, '0');
-            const hStr = hours.toString().padStart(2, '0');
-            const mStr = minutes.toString().padStart(2, '0');
-            const sStr = seconds.toString().padStart(2, '0');
-
-            document.getElementById('timer-display').innerText = `${dStr}d ${hStr}h ${mStr}m ${sStr}s`;
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
+            const minutes = Math.floor((diff / 1000 / 60) % 60).toString().padStart(2, '0');
+            const seconds = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+            
+            const textStr = isSmallTimer
+                ? `Disponible en: ${days}d ${hours}h ${minutes}m ${seconds}s`
+                : `${days.toString().padStart(2, '0')}d ${hours}h ${minutes}m ${seconds}s`;
+                
+            document.getElementById(elementId).innerText = textStr;
         }
 
         document.getElementById('btn-unlock').addEventListener('click', async () => {
@@ -315,38 +345,38 @@
             errorMsg.style.display = 'none';
 
             if (inputDate === SECRET_DATE_USER || inputDate === SECRET_DATE_DEV) {
+                
                 if (inputDate === SECRET_DATE_DEV) {
-                   btnReset.style.display = 'block'; // Mostrar solo si es el admin
+                   isAdmin = true; // Establecemos bandera de admin
+                   btnReset.style.display = 'block'; 
                  } else {
-                    btnReset.style.display = 'none'; // Ocultar si es el usuario normal
+                    isAdmin = false;
+                    btnReset.style.display = 'none'; 
                 }
 
-                if (inputDate === SECRET_DATE_USER) {
-                    btnUnlock.innerText = "Sincronizando... ⏳";
-                    fechaServidorGlobal = await getNetworkTime(); // Siempre devolverá una fecha ahora
-                    btnUnlock.innerText = "Desbloquear 🗝️";
-                }
-
+                btnUnlock.innerText = "Sincronizando... ⏳";
+                fechaServidorGlobal = await getNetworkTime();
+                btnUnlock.innerText = "Desbloquear 🗝️";
+                
                 loginScreen.style.transform = 'scale(1.1)';
                 loginScreen.style.opacity = '0';
                 
                 setTimeout(() => {
                     loginScreen.style.display = 'none';
 
-                    if (inputDate === SECRET_DATE_DEV) {
-                        // Acceso directo del programador salta el contador
+                    if (isAdmin) {
                         hubScreen.classList.add('active');
                         checkExistingChoice();
+                        startMasterClock(); // Iniciamos reloj para la tarjeta del cumple
                     } else {
                         const targetDate = getTargetDate();
-
-                        // Con la clave 18 de mayo entra a evaluar si falta para el 18 de julio
                         if (fechaServidorGlobal < targetDate) {
                             countdownScreen.style.display = 'flex';
-                            startSecureTimer();
+                            startMasterClock();
                         } else {
                             hubScreen.classList.add('active');
                             checkExistingChoice();
+                            startMasterClock(); // Iniciamos reloj para la tarjeta del cumple
                         }
                     }
                 }, 800);
@@ -409,10 +439,15 @@
             }
         });
 
+        // Modificada para permitir acceso admin o después de la fecha correcta
         function checkBirthday() {
+            if (isAdmin) {
+                window.location.href = 'cumpleaños.html'; // Acceso directo sin importar la fecha
+                return;
+            }
+
             const fecha = fechaServidorGlobal || new Date();
-            const currentMonth = fecha.getMonth(); // 7 = Agosto
-            if (currentMonth >= 7) { 
+            if (fecha >= TARGET_BDAY) { 
                 window.location.href = 'cumpleaños.html';
             } else {
                 document.getElementById('birthday-modal').style.display = 'flex';
@@ -464,10 +499,10 @@
             requestAnimationFrame(animateParticles);
         }
         animateParticles();
+        
         document.getElementById('btn-reset').addEventListener('click', async () => {
             if(confirm("¿Estás seguro de que quieres borrar la elección y reiniciar el juego?")) {
                 try {
-                    // Asegúrate de usar la ruta correcta a tu base de datos
                     const dbRef = ref(db, 'proyecto_magico/eleccion'); 
                     await remove(dbRef);
                     alert("Memoria borrada. Recargando...");
