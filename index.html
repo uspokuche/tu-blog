@@ -199,7 +199,7 @@
                 <p class="gift-desc">Un universo pixelado hecho a tu medida.</p>
             </div>
 
-            <div class="gift-card locked" id="card-cumple" onclick="checkBirthday()">
+            <div class="gift-card locked" id="card-cumple" onclick="checkBirthday('cumpleaños.html')">
                 <span class="gift-icon">🎂</span>
                 <h3 class="gift-title" style="color: #ffd700;">Cumpleaños Angélica</h3>
                 <p class="gift-desc">El premio mayor. Protegido por las estrellas hasta agosto.</p>
@@ -413,7 +413,7 @@
             const fecha = fechaServidorGlobal || new Date();
             const currentMonth = fecha.getMonth(); // 7 = Agosto
             if (currentMonth >= 7) { 
-                window.location.href = 'cumple.html';
+                window.location.href = 'cumpleaños.html';
             } else {
                 document.getElementById('birthday-modal').style.display = 'flex';
             }
