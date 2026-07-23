@@ -2,11 +2,20 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Regalo Sorpresa</title>
-    <!-- Fuente romántica para la carta -->
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Regalo Sorpresa 3D</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@300;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --box-color: #d81b60;
+            --box-dark: #ad1457;
+            --ribbon-color: #ffd700;
+            --ribbon-dark: #ffb300;
+            --bg-gradient-1: #1a0b2e;
+            --bg-gradient-2: #05020a;
+            --box-size: 160px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,321 +23,325 @@
         }
 
         body {
-            background-color: #ffb6c1; /* Fondo rosa pastel del video */
-            background-image: radial-gradient(circle, #ffd1dc 20%, #ffb6c1 80%);
-            height: 100vh;
+            background: radial-gradient(circle at center, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             font-family: 'Nunito', sans-serif;
             overflow: hidden;
+            perspective: 1000px; /* Activa el espacio 3D */
         }
 
-        /* Contenedor principal del regalo */
-        .gift-container {
+        /* Canvas para partículas */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Contenedor de la escena 3D */
+        .scene {
             position: relative;
-            width: 200px;
-            height: 200px;
-            margin-top: 100px;
+            width: var(--box-size);
+            height: var(--box-size);
+            transform-style: preserve-3d;
+            transform: rotateX(-15deg) rotateY(45deg);
+            transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 10;
+            cursor: pointer;
         }
 
-        /* La carta oculta dentro de la caja */
+        .scene:hover {
+            transform: rotateX(-25deg) rotateY(55deg) scale(1.05);
+        }
+
+        /* Caja completa */
+        .gift-box {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        /* Caras genéricas de la caja */
+        .face {
+            position: absolute;
+            width: var(--box-size);
+            height: var(--box-size);
+            background: var(--box-color);
+            border: 2px solid rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        /* Listones en las caras */
+        .face::before, .face::after {
+            content: '';
+            position: absolute;
+            background: var(--ribbon-color);
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .face::before { width: 30px; height: 100%; } /* Vertical */
+        .face::after { width: 100%; height: 30px; } /* Horizontal */
+
+        /* Posicionamiento 3D de la base */
+        .front  { transform: rotateY(  0deg) translateZ(calc(var(--box-size) / 2)); background: var(--box-color); }
+        .back   { transform: rotateY(180deg) translateZ(calc(var(--box-size) / 2)); background: var(--box-dark); }
+        .right  { transform: rotateY( 90deg) translateZ(calc(var(--box-size) / 2)); background: var(--box-dark); }
+        .left   { transform: rotateY(-90deg) translateZ(calc(var(--box-size) / 2)); background: var(--box-color); }
+        .bottom { transform: rotateX(-90deg) translateZ(calc(var(--box-size) / 2)); background: #600b2b; }
+        .bottom::before, .bottom::after { display: none; } /* Sin listón abajo */
+
+        /* Tapa de la caja (Lid) */
+        .lid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform-origin: top back; /* Eje de rotación para abrir */
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            top: 0;
+        }
+
+        .lid-face {
+            position: absolute;
+            background: var(--box-color);
+            border: 1px solid rgba(0,0,0,0.15);
+        }
+
+        .lid-top {
+            width: calc(var(--box-size) + 10px);
+            height: calc(var(--box-size) + 10px);
+            transform: rotateX(90deg) translateZ(calc(var(--box-size) / 2 + 5px));
+            left: -5px; top: -5px;
+        }
+        .lid-top::before { content: ''; position: absolute; width: 34px; height: 100%; background: var(--ribbon-color); left: 50%; transform: translateX(-50%); }
+        .lid-top::after { content: ''; position: absolute; width: 100%; height: 34px; background: var(--ribbon-color); top: 50%; transform: translateY(-50%); }
+
+        /* Bordes de la tapa */
+        .lid-front  { width: calc(var(--box-size) + 10px); height: 40px; transform: rotateY(0deg) translateZ(calc(var(--box-size) / 2 + 5px)); left: -5px; top: -5px; }
+        .lid-back   { width: calc(var(--box-size) + 10px); height: 40px; transform: rotateY(180deg) translateZ(calc(var(--box-size) / 2 + 5px)); left: -5px; top: -5px; }
+        .lid-left   { width: calc(var(--box-size) + 10px); height: 40px; transform: rotateY(-90deg) translateZ(calc(var(--box-size) / 2 + 5px)); left: -5px; top: -5px; }
+        .lid-right  { width: calc(var(--box-size) + 10px); height: 40px; transform: rotateY(90deg) translateZ(calc(var(--box-size) / 2 + 5px)); left: -5px; top: -5px; }
+
+        /* Decoración del moño en la tapa */
+        .bow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotateX(-90deg) translateZ(20px);
+            font-size: 60px;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+            pointer-events: none;
+        }
+
+        /* Carta Oculta */
         .letter {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 180px;
-            height: 260px;
+            width: 140px;
+            height: 200px;
             background: #fff;
-            border-radius: 12px;
-            padding: 20px 15px;
+            left: 10px;
+            bottom: 10px;
+            transform: rotateX(0deg) rotateY(0deg) translateZ(0px);
+            opacity: 0;
+            transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 20px;
             text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            z-index: 1; /* Detrás del frente de la caja */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            z-index: -1; /* Dentro de la caja */
+            pointer-events: none;
         }
 
         .letter h1 {
             font-family: 'Dancing Script', cursive;
-            color: #e74c3c;
-            font-size: 2rem;
-            margin-bottom: 10px;
+            color: #d81b60;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
         }
 
         .letter p {
             font-size: 0.9rem;
             color: #333;
-            line-height: 1.4;
-            margin-bottom: 15px;
+            line-height: 1.5;
+            font-weight: 600;
         }
 
-        .letter img {
-            width: 80px;
-            height: auto;
-            border-radius: 50%;
-            /* Puedes cambiar esta URL por la imagen que quieras usar en tu repositorio */
-            content: url('https://api.dicebear.com/7.x/adventurer/svg?seed=Love'); 
+        /* ESTADOS DE ANIMACIÓN (Clase .open) */
+        .scene.open .lid {
+            /* Abre la tapa hacia atrás */
+            transform: translateY(-20px) translateZ(-40px) rotateX(110deg); 
         }
 
-        /* La parte inferior de la caja */
-        .box-bottom {
+        .scene.open .letter {
+            /* Saca la carta flotando hacia arriba y al frente */
+            opacity: 1;
+            transform: translateY(-160px) translateZ(60px) rotateY(-45deg);
+            z-index: 50;
+        }
+
+        /* Texto de ayuda */
+        .hint {
             position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 150px;
-            background: #e74c3c;
-            border-radius: 8px;
-            z-index: 2;
-            box-shadow: inset 0 -10px 20px rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        /* Listones de la caja inferior */
-        .box-bottom::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 100%;
-            background: #f1c40f;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
-        }
-        .box-bottom::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 100%;
-            height: 30px;
-            background: #f1c40f;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
-        }
-
-        /* Contenedor de la tapa y el moño (Lo que se arrastra) */
-        .lid-wrapper {
-            position: absolute;
-            top: 25px; /* Posición inicial alineada con la caja */
-            left: -10px;
-            width: 220px;
-            z-index: 5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Moño (🎀) */
-        .bow {
-            font-size: 60px;
-            margin-bottom: -20px;
-            cursor: grab;
-            user-select: none;
-            touch-action: none; /* Previene el scroll al arrastrar en móviles */
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
-            transition: transform 0.1s;
-        }
-        
-        .bow:active {
-            cursor: grabbing;
-        }
-
-        /* Tapa física de la caja */
-        .box-lid {
-            width: 100%;
-            height: 40px;
-            background: #c0392b;
-            border-radius: 6px;
-            position: relative;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-        }
-
-        /* Listón vertical de la tapa */
-        .box-lid::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 100%;
-            background: #f1c40f;
-        }
-
-        /* Texto de instrucción */
-        .instruction {
-            position: absolute;
-            bottom: -60px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 250px;
-            text-align: center;
-            color: #d81b60;
-            font-weight: bold;
+            bottom: 10vh;
+            color: rgba(255,255,255,0.6);
             font-size: 1.1rem;
-            letter-spacing: 1px;
-            animation: pulseText 2s infinite;
-            transition: opacity 0.3s;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; text-shadow: 0 0 10px #ff3366; }
         }
 
-        @keyframes pulseText {
-            0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
-            50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
-        }
-
-        /* Sistema de partículas (Corazones) */
-        .heart-particle {
-            position: absolute;
-            font-size: 24px;
-            pointer-events: none;
-            opacity: 0;
-            z-index: 10;
-        }
-
-        @keyframes flyUp {
-            0% { transform: translateY(0) scale(0.5) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-400px) scale(1.5) rotate(45deg); opacity: 0; }
-        }
     </style>
 </head>
 <body>
 
-    <div class="gift-container" id="gift-box">
-        
-        <!-- La Carta -->
-        <div class="letter" id="letter">
-            <h1>Para ti ❤️</h1>
-            <p>Eres mi lugar favorito en el mundo, gracias por cada momento a tu lado.</p>
-            <img>
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="scene" id="scene">
+        <div class="gift-box">
+            <!-- Tapa de la caja (Lid) -->
+            <div class="lid">
+                <div class="lid-face lid-top">
+                    <div class="bow">🎀</div>
+                </div>
+                <div class="lid-face lid-front"></div>
+                <div class="lid-face lid-back"></div>
+                <div class="lid-face lid-left"></div>
+                <div class="lid-face lid-right"></div>
+            </div>
+
+            <!-- Base de la caja -->
+            <div class="face front"></div>
+            <div class="face back"></div>
+            <div class="face right"></div>
+            <div class="face left"></div>
+            <div class="face bottom"></div>
+
+            <!-- La Carta (Contenido) -->
+            <div class="letter">
+                <h1>Para ti ❤️</h1>
+                <p>Eres mi lugar favorito en el mundo, gracias por cada momento a tu lado.</p>
+            </div>
         </div>
-
-        <!-- Parte inferior de la caja -->
-        <div class="box-bottom"></div>
-
-        <!-- Tapa y Moño arrastables -->
-        <div class="lid-wrapper" id="lid-wrapper">
-            <div class="bow" id="bow">🎀</div>
-            <div class="box-lid"></div>
-        </div>
-
-        <!-- Texto guía -->
-        <div class="instruction" id="instruction">Desliza el listón hacia abajo</div>
-
     </div>
 
+    <div class="hint" id="hint">Toca el regalo para abrirlo</div>
+
     <script>
-        const bow = document.getElementById('bow');
-        const lidWrapper = document.getElementById('lid-wrapper');
-        const letter = document.getElementById('letter');
-        const instruction = document.getElementById('instruction');
-        const giftContainer = document.getElementById('gift-box');
+        const scene = document.getElementById('scene');
+        const hint = document.getElementById('hint');
+        let isOpened = false;
 
-        let isDragging = false;
-        let startY = 0;
-        let currentY = 0;
-        let giftOpened = false;
-
-        // Iniciar el arrastre (Mouse y Táctil)
-        bow.addEventListener('pointerdown', (e) => {
-            if (giftOpened) return;
-            isDragging = true;
-            startY = e.clientY;
-            bow.style.cursor = 'grabbing';
-            instruction.style.animation = 'none'; // Detiene el parpadeo al interactuar
-        });
-
-        // Movimiento de arrastre
-        window.addEventListener('pointermove', (e) => {
-            if (!isDragging || giftOpened) return;
-            
-            let deltaY = e.clientY - startY;
-            
-            // Limitamos cuánto se puede arrastrar hacia abajo (resistencia)
-            if (deltaY > 0 && deltaY < 120) {
-                currentY = deltaY;
-                // Movemos la tapa hacia abajo visualmente simulando que se jala
-                lidWrapper.style.transform = `translateY(${currentY}px)`;
+        // Lógica de apertura
+        scene.addEventListener('click', () => {
+            if (!isOpened) {
+                scene.classList.add('open');
+                hint.style.opacity = '0';
+                isOpened = true;
                 
-                // Cambiar el mensaje si pasa cierto límite
-                if (currentY > 60) {
-                    instruction.innerText = "¡SUELTA AHORA!";
-                    instruction.style.color = "#c0392b";
-                    bow.style.transform = "scale(1.1)";
-                } else {
-                    instruction.innerText = "Sigue jalando...";
-                    instruction.style.color = "#d81b60";
-                    bow.style.transform = "scale(1)";
-                }
+                // Dispara el sistema de partículas sincronizado con la apertura
+                setTimeout(explodeParticles, 300);
             }
         });
 
-        // Soltar el listón
-        window.addEventListener('pointerup', () => {
-            if (!isDragging || giftOpened) return;
-            isDragging = false;
-            bow.style.cursor = 'grab';
-            
-            // Si jaló lo suficiente, se abre el regalo
-            if (currentY > 60) {
-                openGift();
-            } else {
-                // Si no jaló lo suficiente, rebota a su posición original
-                lidWrapper.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                lidWrapper.style.transform = 'translateY(0)';
-                bow.style.transform = "scale(1)";
-                instruction.innerText = "Desliza el listón hacia abajo";
-                
-                // Limpiar la transición después del rebote
-                setTimeout(() => {
-                    lidWrapper.style.transition = 'none';
-                }, 400);
-            }
-            currentY = 0;
-        });
+        // --- SISTEMA DE PARTÍCULAS ELITE (CANVAS) ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let w, h;
 
-        function openGift() {
-            giftOpened = true;
-            
-            // 1. Desaparecer instrucciones
-            instruction.style.opacity = '0';
-            
-            // 2. Animar la tapa saltando hacia arriba y desapareciendo
-            lidWrapper.style.transition = 'all 0.8s ease-in-out';
-            lidWrapper.style.transform = 'translateY(-250px) scale(0.5)';
-            lidWrapper.style.opacity = '0';
-            
-            // 3. Animar la carta saliendo de la caja
-            letter.style.transition = 'all 1s cubic-bezier(0.25, 1, 0.5, 1) 0.3s';
-            letter.style.transform = 'translateY(-160px)';
-            letter.style.zIndex = '5'; // La trae al frente
-            
-            // 4. Disparar los corazones
-            setTimeout(createHearts, 500);
+        function resizeCanvas() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                // Velocidad explosiva en todas direcciones
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 8 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed - 5; // Tendencia hacia arriba
+                this.size = Math.random() * 15 + 10;
+                this.life = 1; // Opacidad
+                this.decay = Math.random() * 0.01 + 0.005;
+                // Alterna entre dos colores temáticos
+                this.color = Math.random() > 0.5 ? '#ff3366' : '#ffd700';
+                this.rotation = Math.random() * 360;
+                this.rotSpeed = (Math.random() - 0.5) * 10;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.2; // Gravedad suave
+                this.life -= this.decay;
+                this.rotation += this.rotSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.globalAlpha = Math.max(0, this.life);
+                
+                // Dibuja un corazón en canvas
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                const d = this.size;
+                ctx.moveTo(0, d / 4);
+                ctx.bezierCurveTo(0, 0, -d / 2, 0, -d / 2, d / 4);
+                ctx.bezierCurveTo(-d / 2, d / 2, 0, d * 0.75, 0, d);
+                ctx.bezierCurveTo(0, d * 0.75, d / 2, d / 2, d / 2, d / 4);
+                ctx.bezierCurveTo(d / 2, 0, 0, 0, 0, d / 4);
+                ctx.fill();
+                ctx.restore();
+            }
         }
 
-        function createHearts() {
-            const numHearts = 35;
-            for (let i = 0; i < numHearts; i++) {
-                setTimeout(() => {
-                    const heart = document.createElement('div');
-                    heart.innerHTML = '❤️';
-                    heart.className = 'heart-particle';
-                    
-                    // Posición horizontal aleatoria dentro del contenedor
-                    const randomLeft = Math.random() * 200; 
-                    heart.style.left = `${randomLeft}px`;
-                    heart.style.bottom = '150px';
-                    
-                    // Duración aleatoria de la animación para dar variedad
-                    const animDuration = 1.5 + Math.random() * 1.5;
-                    heart.style.animation = `flyUp ${animDuration}s ease-in forwards`;
-                    
-                    giftContainer.appendChild(heart);
-                    
-                    // Limpiar el DOM después de la animación
-                    setTimeout(() => heart.remove(), animDuration * 1000);
-                }, i * 80); // Escalonar la aparición de los corazones
+        function explodeParticles() {
+            // Centro geométrico de la pantalla
+            const startX = w / 2;
+            const startY = h / 2 + 50; // Ligeramente ajustado a la posición de la caja
+
+            for (let i = 0; i < 80; i++) {
+                particles.push(new Particle(startX, startY));
+            }
+            animateParticles();
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, w, h);
+            let activeParticles = false;
+
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                if (p.life > 0) {
+                    p.update();
+                    p.draw();
+                    activeParticles = true;
+                }
+            }
+
+            if (activeParticles) {
+                requestAnimationFrame(animateParticles);
+            } else {
+                particles = []; // Limpia la memoria cuando termina
             }
         }
     </script>
